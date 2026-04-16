@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/pedido_provider.dart';
+import '../supabase_config.dart';
 import 'pedidos_screen.dart';
 
 class SelectStoreScreen extends StatefulWidget {
@@ -20,18 +21,15 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
 
-  final List<Map<String, String>> stores = [
-    {"name": "Tienda Centro", "code": "TC-001", "plaza": "Plaza Centro"},
-    {"name": "Tienda Norte", "code": "TN-002", "plaza": "Plaza Norte"},
-    {"name": "Tienda Sur", "code": "TS-003", "plaza": "Plaza Sur"},
-  ];
-
-  List<Map<String, String>> storesFiltradas = [];
+  List<Map<String, dynamic>> stores = [];
+  List<Map<String, dynamic>> storesFiltradas = [];
+  bool cargando = true;
+  String? errorCarga;
 
   @override
   void initState() {
     super.initState();
-    storesFiltradas = stores;
+    _cargarTiendas();
     searchController.addListener(_filtrar);
 
     _animController = AnimationController(
@@ -49,6 +47,38 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
       parent: _animController,
       curve: Curves.easeOut,
     ));
+  }
+
+  Future<void> _cargarTiendas() async {
+    try {
+      List<Map<String, dynamic>> todas = [];
+      int desde = 0;
+      const int bloque = 1000;
+
+      while (true) {
+        final response = await supabase
+            .from('tiendas')
+            .select('nombre_tienda, codigo_tienda, plaza')
+            .eq('activa', true)
+            .order('nombre_tienda')
+            .range(desde, desde + bloque - 1);
+
+        todas.addAll(List<Map<String, dynamic>>.from(response));
+        if (response.length < bloque) break;
+        desde += bloque;
+      }
+
+      setState(() {
+        stores = todas;
+        storesFiltradas = todas;
+        cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorCarga = 'Error al cargar las tiendas';
+        cargando = false;
+      });
+    }
   }
 
   void _abrirBuscador() {
@@ -73,9 +103,9 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
     final query = searchController.text.toLowerCase();
     setState(() {
       storesFiltradas = stores.where((s) {
-        return s['name']!.toLowerCase().contains(query) ||
-            s['code']!.toLowerCase().contains(query) ||
-            s['plaza']!.toLowerCase().contains(query);
+        return s['nombre_tienda'].toString().toLowerCase().contains(query) ||
+            s['codigo_tienda'].toString().toLowerCase().contains(query) ||
+            s['plaza'].toString().toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -90,6 +120,12 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colors = [
+      const Color(0xFFde2924),
+      const Color(0xFFed5c32),
+      const Color(0xFFe8a042),
+    ];
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: Column(
@@ -145,9 +181,9 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
                               ],
                             ),
                           ),
-                          // ── Lupa ──
+                          // Lupa
                           GestureDetector(
-                            onTap: _abrirBuscador,
+                            onTap: cargando ? null : _abrirBuscador,
                             child: Container(
                               width: 42,
                               height: 42,
@@ -173,7 +209,9 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "${stores.length} tiendas disponibles",
+                        cargando
+                            ? "Cargando tiendas..."
+                            : "${stores.length} tiendas disponibles",
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.75),
                           fontSize: 14,
@@ -192,7 +230,6 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
                       opacity: _fadeAnim,
                       child: Row(
                         children: [
-                          // Botón cerrar
                           GestureDetector(
                             onTap: _cerrarBuscador,
                             child: Container(
@@ -202,12 +239,13 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
                                 color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.arrow_back_ios_new_rounded,
-                                  color: Colors.white, size: 18),
+                              child: const Icon(
+                                  Icons.arrow_back_ios_new_rounded,
+                                  color: Colors.white,
+                                  size: 18),
                             ),
                           ),
                           const SizedBox(width: 12),
-                          // Campo de búsqueda
                           Expanded(
                             child: Container(
                               height: 48,
@@ -226,7 +264,7 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
                                 controller: searchController,
                                 focusNode: searchFocus,
                                 decoration: InputDecoration(
-                                  hintText: "Buscar tienda...",
+                                  hintText: "Buscar tienda o distrito...",
                                   hintStyle: TextStyle(
                                       color: Colors.grey.shade400,
                                       fontSize: 14),
@@ -234,7 +272,8 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
                                       color: Color(0xFFde2924), size: 20),
                                   suffixIcon: searchController.text.isNotEmpty
                                       ? GestureDetector(
-                                          onTap: () => searchController.clear(),
+                                          onTap: () =>
+                                              searchController.clear(),
                                           child: Icon(Icons.close_rounded,
                                               color: Colors.grey.shade400,
                                               size: 18),
@@ -256,10 +295,10 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
             ),
           ),
 
-          // ── Contador resultados ──
+          // ── Contador ──
           if (buscando)
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
               child: Row(
                 children: [
                   Text(
@@ -276,137 +315,188 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
               ),
             ),
 
-          // ── Lista ──
+          // ── Contenido ──
           Expanded(
-            child: () {
-              final lista = buscando ? storesFiltradas : stores;
-
-              if (buscando && lista.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.store_outlined,
-                          size: 56, color: Colors.grey.shade300),
-                      const SizedBox(height: 12),
-                      Text(
-                        "No se encontró ninguna tienda",
-                        style: TextStyle(
-                            color: Colors.grey.shade400, fontSize: 15),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                itemCount: lista.length,
-                itemBuilder: (context, index) {
-                  final store = lista[index];
-                  final colors = [
-                    const Color(0xFFde2924),
-                    const Color(0xFFed5c32),
-                    const Color(0xFFe8a042),
-                  ];
-
-                  return GestureDetector(
-                    onTap: () {
-                      context
-                          .read<PedidoProvider>()
-                          .seleccionarTienda(store["name"]!);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              PedidosScreen(storeName: store["name"]!),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colors[index % colors.length]
-                                .withOpacity(0.12),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(18),
-                        child: Row(
+            child: cargando
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: Color(0xFFde2924)),
+                        SizedBox(height: 16),
+                        Text("Cargando tiendas...",
+                            style: TextStyle(color: Color(0xFF666666))),
+                      ],
+                    ),
+                  )
+                : errorCarga != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 52,
-                              height: 52,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    colors[index % colors.length],
-                                    colors[index % colors.length]
-                                        .withOpacity(0.7),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: const Icon(
-                                  Icons.store_mall_directory_rounded,
-                                  color: Colors.white,
-                                  size: 26),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    store["name"]!,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15,
-                                      color: Color(0xFF1a1a1a),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "${store['plaza']}  ·  ${store['code']}",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                color: colors[index % colors.length]
-                                    .withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 15,
-                                color: colors[index % colors.length],
-                              ),
+                            const Icon(Icons.wifi_off_rounded,
+                                color: Colors.grey, size: 56),
+                            const SizedBox(height: 12),
+                            Text(errorCarga!,
+                                style:
+                                    const TextStyle(color: Colors.grey)),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFde2924)),
+                              onPressed: () {
+                                setState(() {
+                                  cargando = true;
+                                  errorCarga = null;
+                                });
+                                _cargarTiendas();
+                              },
+                              child: const Text("Reintentar",
+                                  style: TextStyle(color: Colors.white)),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            }(),
+                      )
+                    : () {
+                        final lista =
+                            buscando ? storesFiltradas : stores;
+
+                        if (buscando && lista.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.store_outlined,
+                                    size: 56,
+                                    color: Colors.grey.shade300),
+                                const SizedBox(height: 12),
+                                Text(
+                                  "No se encontró ninguna tienda",
+                                  style: TextStyle(
+                                      color: Colors.grey.shade400,
+                                      fontSize: 15),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          padding:
+                              const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                          itemCount: lista.length,
+                          itemBuilder: (context, index) {
+                            final store = lista[index];
+
+                            return GestureDetector(
+                              onTap: () {
+                                context
+                                    .read<PedidoProvider>()
+                                    .seleccionarTienda(
+                                      store["nombre_tienda"],
+                                      plaza: store["plaza"],
+                                      cr: store["codigo_tienda"],
+                                    );
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PedidosScreen(
+                                      storeName: store["nombre_tienda"],
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: colors[index % colors.length]
+                                          .withOpacity(0.1),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(18),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 52,
+                                        height: 52,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              colors[
+                                                  index % colors.length],
+                                              colors[index % colors.length]
+                                                  .withOpacity(0.7),
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(14),
+                                        ),
+                                        child: const Icon(
+                                            Icons
+                                                .store_mall_directory_rounded,
+                                            color: Colors.white,
+                                            size: 26),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              store["nombre_tienda"],
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 15,
+                                                color: Color(0xFF1a1a1a),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              "${store['plaza']}  ·  ${store['codigo_tienda']}",
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey.shade500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 34,
+                                        height: 34,
+                                        decoration: BoxDecoration(
+                                          color:
+                                              colors[index % colors.length]
+                                                  .withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          Icons.arrow_forward_ios_rounded,
+                                          size: 15,
+                                          color:
+                                              colors[index % colors.length],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }(),
           ),
         ],
       ),

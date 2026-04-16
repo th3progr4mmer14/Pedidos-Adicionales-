@@ -8,7 +8,7 @@ class ExcelExportService {
   static Future<String> exportarPedido({
     required String plaza,
     required String tienda,
-    required String retek,
+    required String cr,
     required List<ProductoPedido> productos,
   }) async {
     final excel = Excel.createExcel();
@@ -19,7 +19,7 @@ class ExcelExportService {
       TextCellValue("Fecha"),
       TextCellValue("Plaza"),
       TextCellValue("Tienda"),
-      TextCellValue("Retek"),
+      TextCellValue("CR"),
       TextCellValue("SKU"),
       TextCellValue("Item Descripción"),
       TextCellValue("Piezas"),
@@ -36,7 +36,7 @@ class ExcelExportService {
         TextCellValue(fechaStr),
         TextCellValue(plaza),
         TextCellValue(tienda),
-        TextCellValue(retek),
+        TextCellValue(cr),
         TextCellValue(producto.sku),
         TextCellValue(producto.nombre),
         IntCellValue(producto.cantidad),

@@ -445,9 +445,9 @@ class ResumenPedidoScreen extends StatelessWidget {
                             try {
                               final path =
                                   await ExcelExportService.exportarPedido(
-                                plaza: "Plaza Tabasco",
+                                plaza: pedidoProvider.plaza ?? "",
                                 tienda: storeName,
-                                retek: "RET001",
+                                cr: pedidoProvider.cr ?? "",
                                 productos: pedidoProvider.items,
                               );
 
