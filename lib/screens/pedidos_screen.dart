@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'nuevo_pedido_screen.dart';
+import 'historial_screen.dart';
 
 class PedidosScreen extends StatelessWidget {
   final String storeName;
@@ -35,7 +36,6 @@ class PedidosScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Back + tienda badge
                     Row(
                       children: [
                         GestureDetector(
@@ -46,8 +46,10 @@ class PedidosScreen extends StatelessWidget {
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                                color: Colors.white, size: 16),
+                            child: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white,
+                                size: 16),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -105,7 +107,7 @@ class PedidosScreen extends StatelessWidget {
                 children: [
                   const SizedBox(height: 8),
 
-                  // Card nuevo pedido
+                  // ── Card Nuevo Pedido ──
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -128,7 +130,8 @@ class PedidosScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFde2924).withOpacity(0.4),
+                            color:
+                                const Color(0xFFde2924).withOpacity(0.4),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -175,9 +178,81 @@ class PedidosScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
-                  // Info card
+                  // ── Card Historial ──
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const HistorialScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF9b101a), Color(0xFFe8a042)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                const Color(0xFF9b101a).withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Historial",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                                SizedBox(height: 6),
+                                Text(
+                                  "Consulta los pedidos\nanteriormente enviados",
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          CircleAvatar(
+                            radius: 28,
+                            backgroundColor: Colors.white24,
+                            child: Icon(
+                              Icons.history_rounded,
+                              color: Colors.white,
+                              size: 28,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ── Info card ──
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),

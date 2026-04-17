@@ -55,9 +55,9 @@ class _InicioScreenState extends State<InicioScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF9b101a), // Rojo oscuro arriba
-              Color(0xFFde2924), // Rojo principal centro
-              Color(0xFFed5c32), // Naranja abajo
+              Color(0xFF9b101a),
+              Color(0xFFde2924),
+              Color(0xFFed5c32),
             ],
             stops: [0.0, 0.5, 1.0],
           ),
@@ -65,7 +65,6 @@ class _InicioScreenState extends State<InicioScreen>
         child: SafeArea(
           child: Column(
             children: [
-              // ── Franja decorativa superior ──
               Container(
                 height: 6,
                 decoration: const BoxDecoration(
@@ -85,7 +84,7 @@ class _InicioScreenState extends State<InicioScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // ── Logo OXXO ──
+                          // Logo OXXO
                           Container(
                             width: 220,
                             height: 110,
@@ -110,7 +109,6 @@ class _InicioScreenState extends State<InicioScreen>
 
                           const SizedBox(height: 32),
 
-                          // ── Título app ──
                           const Text(
                             'Pedidos',
                             style: TextStyle(
@@ -132,7 +130,7 @@ class _InicioScreenState extends State<InicioScreen>
 
                           const SizedBox(height: 60),
 
-                          // ── Avatar usuario ──
+                          // Avatar
                           Container(
                             width: 90,
                             height: 90,
@@ -146,8 +144,8 @@ class _InicioScreenState extends State<InicioScreen>
                             ),
                             child: const Icon(
                               Icons.person,
-                            color: Colors.white,
-                              size: 40, 
+                              color: Colors.white,
+                              size: 50,
                             ),
                           ),
 
@@ -165,7 +163,7 @@ class _InicioScreenState extends State<InicioScreen>
 
                           const SizedBox(height: 48),
 
-                          // ── Botón Comenzar ──
+                          // Botón Comenzar
                           SizedBox(
                             width: double.infinity,
                             height: 56,
@@ -183,7 +181,8 @@ class _InicioScreenState extends State<InicioScreen>
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => const SelectStoreScreen(),
+                                    builder: (_) =>
+                                        const SelectStoreScreen(),
                                   ),
                                 );
                               },
@@ -199,7 +198,8 @@ class _InicioScreenState extends State<InicioScreen>
                                     ),
                                   ),
                                   SizedBox(width: 10),
-                                  Icon(Icons.arrow_forward_rounded, size: 22),
+                                  Icon(Icons.arrow_forward_rounded,
+                                      size: 22),
                                 ],
                               ),
                             ),
@@ -211,7 +211,6 @@ class _InicioScreenState extends State<InicioScreen>
                 ),
               ),
 
-              // ── Franja decorativa inferior ──
               Container(
                 height: 6,
                 decoration: const BoxDecoration(
