@@ -25,9 +25,11 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
   String? productoSeleccionado;
   String? skuSeleccionado;
   String unidadSeleccionada = "Pieza";
+  String? supergrupoSeleccionado;
 
   List<Map<String, dynamic>> catalogo = [];
   List<Map<String, dynamic>> productosFiltrados = [];
+  List<String> supergrupos = [];
   bool cargando = true;
   String? errorCarga;
 
@@ -35,50 +37,74 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
   void initState() {
     super.initState();
     _cargarCatalogo();
-    searchController.addListener(_filtrarProductos);
+    searchController.addListener(_aplicarFiltros);
   }
 
   Future<void> _cargarCatalogo() async {
-  try {
-    List<Map<String, dynamic>> todos = [];
-    int desde = 0;
-    const int bloque = 1000;
+    try {
+      List<Map<String, dynamic>> todos = [];
+      int desde = 0;
+      const int bloque = 1000;
 
-    while (true) {
-      final response = await supabase
-          .from('productos')
-          .select('nombre_producto, sku, unidad')
-          .eq('activo', true)
-          .order('nombre_producto')
-          .range(desde, desde + bloque - 1);
+      while (true) {
+        final response = await supabase
+            .from('productos')
+            .select('nombre_producto, sku, unidad, supergrupo')
+            .eq('activo', true)
+            .order('nombre_producto')
+            .range(desde, desde + bloque - 1);
 
-      todos.addAll(List<Map<String, dynamic>>.from(response));
+        todos.addAll(List<Map<String, dynamic>>.from(response));
+        if (response.length < bloque) break;
+        desde += bloque;
+      }
 
-      if (response.length < bloque) break;
-      desde += bloque;
+      // Extraer supergrupos únicos
+      final Set<String> supergruposSet = {};
+      for (var p in todos) {
+        if (p['supergrupo'] != null &&
+            p['supergrupo'].toString().isNotEmpty) {
+          supergruposSet.add(p['supergrupo'].toString());
+        }
+      }
+      final listaSupergrupos = supergruposSet.toList()..sort();
+
+      setState(() {
+        catalogo = todos;
+        productosFiltrados = todos;
+        supergrupos = listaSupergrupos;
+        cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorCarga = 'Error al cargar el catálogo';
+        cargando = false;
+      });
     }
-
-    setState(() {
-      catalogo = todos;
-      productosFiltrados = todos;
-      cargando = false;
-    });
-  } catch (e) {
-    setState(() {
-      errorCarga = 'Error al cargar el catálogo';
-      cargando = false;
-    });
   }
-}
 
-  void _filtrarProductos() {
+  void _aplicarFiltros() {
     final query = searchController.text.toLowerCase();
     setState(() {
       productosFiltrados = catalogo.where((p) {
-        return p['nombre_producto'].toString().toLowerCase().contains(query) ||
+        final coincideTexto = query.isEmpty ||
+            p['nombre_producto'].toString().toLowerCase().contains(query) ||
             p['sku'].toString().toLowerCase().contains(query);
+
+        final coincideSupergrupo = supergrupoSeleccionado == null ||
+            p['supergrupo'].toString() == supergrupoSeleccionado;
+
+        return coincideTexto && coincideSupergrupo;
       }).toList();
     });
+  }
+
+  void _seleccionarSupergrupo(String supergrupo) {
+    setState(() {
+      supergrupoSeleccionado =
+          supergrupoSeleccionado == supergrupo ? null : supergrupo;
+    });
+    _aplicarFiltros();
   }
 
   void agregarProducto() {
@@ -198,7 +224,8 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                       ),
                       child: SafeArea(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+                          padding:
+                              const EdgeInsets.fromLTRB(24, 16, 24, 20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -211,7 +238,8 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
+                                        color:
+                                            Colors.white.withOpacity(0.2),
                                         borderRadius:
                                             BorderRadius.circular(10),
                                       ),
@@ -221,14 +249,14 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                           size: 16),
                                     ),
                                   ),
-                                  // Badge con total de productos en pedido
                                   if (totalItems > 0)
                                     GestureDetector(
                                       onTap: () => Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => ResumenPedidoScreen(
-                                              storeName: storeName),
+                                          builder: (_) =>
+                                              ResumenPedidoScreen(
+                                                  storeName: storeName),
                                         ),
                                       ),
                                       child: Container(
@@ -277,6 +305,55 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                   fontSize: 14,
                                 ),
                               ),
+                              const SizedBox(height: 16),
+
+                              // ── Chips de supergrupo ──
+                              SizedBox(
+                                height: 34,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: supergrupos.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(width: 8),
+                                  itemBuilder: (context, index) {
+                                    final sg = supergrupos[index];
+                                    final seleccionado =
+                                        supergrupoSeleccionado == sg;
+
+                                    return GestureDetector(
+                                      onTap: () =>
+                                          _seleccionarSupergrupo(sg),
+                                      child: AnimatedContainer(
+                                        duration: const Duration(
+                                            milliseconds: 200),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 14, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: seleccionado
+                                              ? Colors.white
+                                              : Colors.white
+                                                  .withOpacity(0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          sg,
+                                          style: TextStyle(
+                                            color: seleccionado
+                                                ? const Color(0xFF9b101a)
+                                                : Colors.white,
+                                            fontWeight: seleccionado
+                                                ? FontWeight.w800
+                                                : FontWeight.w500,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 8),
                             ],
                           ),
                         ),
@@ -309,13 +386,15 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                 controller: searchController,
                                 decoration: InputDecoration(
                                   hintText: "Nombre o SKU...",
-                                  hintStyle:
-                                      TextStyle(color: Colors.grey.shade400),
-                                  prefixIcon: const Icon(Icons.search_rounded,
+                                  hintStyle: TextStyle(
+                                      color: Colors.grey.shade400),
+                                  prefixIcon: const Icon(
+                                      Icons.search_rounded,
                                       color: Color(0xFFde2924)),
                                   border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 14),
+                                  contentPadding:
+                                      const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 14),
                                 ),
                               ),
                             ),
@@ -323,10 +402,10 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                             const SizedBox(height: 8),
 
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4),
                               child: Text(
-                                "${productosFiltrados.length} productos",
+                                "${productosFiltrados.length} productos${supergrupoSeleccionado != null ? ' en $supergrupoSeleccionado' : ''}",
                                 style: TextStyle(
                                     color: Colors.grey.shade500,
                                     fontSize: 12),
@@ -359,13 +438,15 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                   itemBuilder: (context, index) {
                                     final producto =
                                         productosFiltrados[index];
-                                    final seleccionado = productoSeleccionado ==
-                                        producto['nombre_producto'];
+                                    final seleccionado =
+                                        productoSeleccionado ==
+                                            producto['nombre_producto'];
 
                                     return ListTile(
                                       selected: seleccionado,
-                                      selectedTileColor: const Color(0xFFde2924)
-                                          .withOpacity(0.06),
+                                      selectedTileColor:
+                                          const Color(0xFFde2924)
+                                              .withOpacity(0.06),
                                       title: Text(
                                         producto['nombre_producto'],
                                         style: TextStyle(
@@ -378,11 +459,45 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                               : const Color(0xFF1a1a1a),
                                         ),
                                       ),
-                                      subtitle: Text(
-                                        producto['sku'],
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade500),
+                                      subtitle: Row(
+                                        children: [
+                                          Text(
+                                            producto['sku'],
+                                            style: TextStyle(
+                                                fontSize: 12,
+                                                color:
+                                                    Colors.grey.shade500),
+                                          ),
+                                          if (producto['supergrupo'] !=
+                                                  null &&
+                                              producto['supergrupo']
+                                                  .toString()
+                                                  .isNotEmpty) ...[
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 1),
+                                              decoration: BoxDecoration(
+                                                color: const Color(
+                                                        0xFFe8a042)
+                                                    .withOpacity(0.15),
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        4),
+                                              ),
+                                              child: Text(
+                                                producto['supergrupo'],
+                                                style: const TextStyle(
+                                                  fontSize: 10,
+                                                  color: Color(0xFFe8a042),
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                       trailing: seleccionado
                                           ? const CircleAvatar(
@@ -421,8 +536,8 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 10),
                                 decoration: BoxDecoration(
-                                  color:
-                                      const Color(0xFFde2924).withOpacity(0.08),
+                                  color: const Color(0xFFde2924)
+                                      .withOpacity(0.08),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                       color: const Color(0xFFde2924)
@@ -459,7 +574,8 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const _SectionLabel(label: "Cantidad *"),
+                                      const _SectionLabel(
+                                          label: "Cantidad *"),
                                       const SizedBox(height: 8),
                                       _InputBox(
                                         child: TextField(
@@ -495,14 +611,20 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                             padding:
                                                 const EdgeInsets.symmetric(
                                                     horizontal: 16),
-                                            items: ["Pieza", "Caja", "Kg", "Litro"]
+                                            items: [
+                                              "Pieza",
+                                              "Caja",
+                                              "Kg",
+                                              "Litro"
+                                            ]
                                                 .map((u) => DropdownMenuItem(
                                                     value: u,
                                                     child: Text(u)))
                                                 .toList(),
-                                            onChanged: (value) => setState(
-                                                () => unidadSeleccionada =
-                                                    value!),
+                                            onChanged: (value) =>
+                                                setState(() =>
+                                                    unidadSeleccionada =
+                                                        value!),
                                           ),
                                         ),
                                       ),
@@ -532,7 +654,6 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
 
                             const SizedBox(height: 28),
 
-                            // Botón agregar
                             SizedBox(
                               width: double.infinity,
                               height: 54,
@@ -563,7 +684,6 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
 
                             const SizedBox(height: 12),
 
-                            // Ver resumen
                             SizedBox(
                               width: double.infinity,
                               height: 54,

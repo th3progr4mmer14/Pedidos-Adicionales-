@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../providers/pedido_provider.dart';
 import '../services/excel_export_service.dart';
+import '../supabase_config.dart';
 import 'nuevo_pedido_screen.dart';
 import 'pedido_enviado_screen.dart';
 
@@ -450,6 +451,15 @@ class ResumenPedidoScreen extends StatelessWidget {
                                 cr: pedidoProvider.cr ?? "",
                                 productos: pedidoProvider.items,
                               );
+
+                              await supabase.from('pedidos').insert({
+                                'nombre_tienda': storeName,
+                                'codigo_tienda': pedidoProvider.cr ?? '',
+                                'plaza': pedidoProvider.plaza ?? '',
+                                'total_articulos':
+                                    pedidoProvider.totalProductos,
+                                'estatus': 'enviado',
+                              });
 
                               final result = await Share.shareXFiles(
                                 [XFile(path)],
