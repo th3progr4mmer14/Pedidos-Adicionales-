@@ -16,6 +16,46 @@ class ResumenPedidoScreen extends StatelessWidget {
     required this.storeName,
   });
 
+  Future<void> _guardarEnHistorial({
+    required String nombreTienda,
+    required String codigoTienda,
+    required String plaza,
+    required int totalArticulos,
+    required List productos,
+  }) async {
+    try {
+      // 1. Insertar pedido y obtener el id generado
+      final pedidoResponse = await supabase
+          .from('pedidos')
+          .insert({
+            'nombre_tienda': nombreTienda,
+            'codigo_tienda': codigoTienda,
+            'plaza': plaza,
+            'total_articulos': totalArticulos,
+            'estatus': 'enviado',
+            'fecha_pedido': DateTime.now().toIso8601String(),
+          })
+          .select('id_pedido')
+          .single();
+
+      final idPedido = pedidoResponse['id_pedido'];
+
+      // 2. Insertar detalle de productos
+      final detalles = productos.map((p) => {
+        'id_pedido': idPedido,
+        'nombre_producto': p.nombre,
+        'sku': p.sku,
+        'cantidad': p.cantidad,
+        'unidad': p.unidad,
+        'observaciones': p.observaciones ?? '',
+      }).toList();
+
+      await supabase.from('detalle_pedido').insert(detalles);
+    } catch (e) {
+      debugPrint('Error al guardar en historial: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final pedidoProvider = context.watch<PedidoProvider>();
@@ -90,8 +130,7 @@ class ResumenPedidoScreen extends StatelessWidget {
                         SizedBox(height: 8),
                         Text(
                           "Agrega productos desde el catálogo",
-                          style:
-                              TextStyle(color: Colors.grey, fontSize: 14),
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                       ],
                     ),
@@ -210,7 +249,6 @@ class ResumenPedidoScreen extends StatelessWidget {
                           padding: const EdgeInsets.all(16),
                           child: Row(
                             children: [
-                              // Número
                               Container(
                                 width: 36,
                                 height: 36,
@@ -235,10 +273,10 @@ class ResumenPedidoScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 14),
-                              // Info
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       producto.nombre,
@@ -290,7 +328,6 @@ class ResumenPedidoScreen extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              // Eliminar
                               GestureDetector(
                                 onTap: () {
                                   showDialog(
@@ -299,7 +336,8 @@ class ResumenPedidoScreen extends StatelessWidget {
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(20)),
-                                      title: const Text("Eliminar producto"),
+                                      title:
+                                          const Text("Eliminar producto"),
                                       content: Text(
                                           "¿Eliminar \"${producto.nombre}\"?"),
                                       actions: [
@@ -361,7 +399,6 @@ class ResumenPedidoScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      // Total
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
@@ -393,7 +430,6 @@ class ResumenPedidoScreen extends StatelessWidget {
 
                       const SizedBox(height: 12),
 
-                      // Agregar otro
                       SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -419,7 +455,6 @@ class ResumenPedidoScreen extends StatelessWidget {
 
                       const SizedBox(height: 10),
 
-                      // Exportar y compartir
                       SizedBox(
                         width: double.infinity,
                         height: 54,
@@ -452,15 +487,6 @@ class ResumenPedidoScreen extends StatelessWidget {
                                 productos: pedidoProvider.items,
                               );
 
-                              await supabase.from('pedidos').insert({
-                                'nombre_tienda': storeName,
-                                'codigo_tienda': pedidoProvider.cr ?? '',
-                                'plaza': pedidoProvider.plaza ?? '',
-                                'total_articulos':
-                                    pedidoProvider.totalProductos,
-                                'estatus': 'enviado',
-                              });
-
                               final result = await Share.shareXFiles(
                                 [XFile(path)],
                                 subject: "Pedido - $storeName",
@@ -468,19 +494,31 @@ class ResumenPedidoScreen extends StatelessWidget {
                                     "Pedido de $storeName — ${pedidoProvider.totalProductos} artículos",
                               );
 
-                              // Navegar a pedido enviado si compartió exitosamente
                               if (context.mounted &&
                                   result.status ==
                                       ShareResultStatus.success) {
-                                pedidoProvider.limpiarPedido();
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        const PedidoEnviadoScreen(),
-                                  ),
-                                  (route) => false,
+                                // Guardar pedido + detalle en Supabase
+                                await _guardarEnHistorial(
+                                  nombreTienda: storeName,
+                                  codigoTienda: pedidoProvider.cr ?? "",
+                                  plaza: pedidoProvider.plaza ?? "",
+                                  totalArticulos:
+                                      pedidoProvider.totalProductos,
+                                  productos: pedidoProvider.items,
                                 );
+
+                                pedidoProvider.limpiarPedido();
+
+                                if (context.mounted) {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const PedidoEnviadoScreen(),
+                                    ),
+                                    (route) => false,
+                                  );
+                                }
                               }
                             } catch (e) {
                               if (context.mounted) {
@@ -499,7 +537,6 @@ class ResumenPedidoScreen extends StatelessWidget {
 
                       const SizedBox(height: 10),
 
-                      // Limpiar
                       SizedBox(
                         width: double.infinity,
                         height: 44,
@@ -514,13 +551,15 @@ class ResumenPedidoScreen extends StatelessWidget {
                               context: context,
                               builder: (_) => AlertDialog(
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20)),
+                                    borderRadius:
+                                        BorderRadius.circular(20)),
                                 title: const Text("Limpiar pedido"),
                                 content: const Text(
                                     "¿Eliminar todos los productos del pedido?"),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context),
+                                    onPressed: () =>
+                                        Navigator.pop(context),
                                     child: const Text("Cancelar"),
                                   ),
                                   TextButton(
@@ -529,7 +568,8 @@ class ResumenPedidoScreen extends StatelessWidget {
                                       Navigator.pop(context);
                                     },
                                     child: const Text("Limpiar",
-                                        style: TextStyle(color: Colors.red)),
+                                        style:
+                                            TextStyle(color: Colors.red)),
                                   ),
                                 ],
                               ),

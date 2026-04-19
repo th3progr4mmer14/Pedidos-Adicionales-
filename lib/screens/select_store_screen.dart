@@ -482,7 +482,7 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
                                         plaza: store["plaza"],
                                         cr: store["codigo_tienda"],
                                       );
-                                  Navigator.pushReplacement(
+                                  Navigator.push(
                                     context,
                                     MaterialPageRoute(
                                       builder: (_) => PedidosScreen(
