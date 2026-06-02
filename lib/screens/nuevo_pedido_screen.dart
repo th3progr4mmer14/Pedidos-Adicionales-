@@ -442,87 +442,90 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                         productoSeleccionado ==
                                             producto['nombre_producto'];
 
-                                    return ListTile(
-                                      selected: seleccionado,
-                                      selectedTileColor:
-                                          const Color(0xFFde2924)
-                                              .withOpacity(0.06),
-                                      title: Text(
-                                        producto['nombre_producto'],
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: seleccionado
-                                              ? FontWeight.w700
-                                              : FontWeight.normal,
-                                          color: seleccionado
-                                              ? const Color(0xFF9b101a)
-                                              : const Color(0xFF1a1a1a),
-                                        ),
-                                      ),
-                                      subtitle: Row(
-                                        children: [
-                                          Text(
-                                            producto['sku'],
-                                            style: TextStyle(
-                                                fontSize: 12,
-                                                color:
-                                                    Colors.grey.shade500),
+                                    return Material(
+                                      color: Colors.transparent,
+                                      child: ListTile(
+                                        selected: seleccionado,
+                                        selectedTileColor:
+                                            const Color(0xFFde2924)
+                                                .withOpacity(0.06),
+                                        title: Text(
+                                          producto['nombre_producto'],
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: seleccionado
+                                                ? FontWeight.w700
+                                                : FontWeight.normal,
+                                            color: seleccionado
+                                                ? const Color(0xFF9b101a)
+                                                : const Color(0xFF1a1a1a),
                                           ),
-                                          if (producto['supergrupo'] !=
-                                                  null &&
-                                              producto['supergrupo']
-                                                  .toString()
-                                                  .isNotEmpty) ...[
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 6,
-                                                      vertical: 1),
-                                              decoration: BoxDecoration(
-                                                color: const Color(
-                                                        0xFFe8a042)
-                                                    .withOpacity(0.15),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                        4),
-                                              ),
-                                              child: Text(
-                                                producto['supergrupo'],
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  color: Color(0xFFe8a042),
-                                                  fontWeight: FontWeight.w600,
+                                        ),
+                                        subtitle: Row(
+                                          children: [
+                                            Text(
+                                              producto['sku'],
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color:
+                                                      Colors.grey.shade500),
+                                            ),
+                                            if (producto['supergrupo'] !=
+                                                    null &&
+                                                producto['supergrupo']
+                                                    .toString()
+                                                    .isNotEmpty) ...[
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 1),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(
+                                                          0xFFe8a042)
+                                                      .withOpacity(0.15),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          4),
+                                                ),
+                                                child: Text(
+                                                  producto['supergrupo'],
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    color: Color(0xFFe8a042),
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
+                                            ],
                                           ],
-                                        ],
+                                        ),
+                                        trailing: seleccionado
+                                            ? const CircleAvatar(
+                                                radius: 12,
+                                                backgroundColor:
+                                                    Color(0xFFde2924),
+                                                child: Icon(Icons.check,
+                                                    color: Colors.white,
+                                                    size: 14),
+                                              )
+                                            : null,
+                                        onTap: () {
+                                          setState(() {
+                                            productoSeleccionado =
+                                                producto['nombre_producto'];
+                                            skuSeleccionado = producto['sku'];
+                                            if (producto['unidad'] != null &&
+                                                producto['unidad']
+                                                    .toString()
+                                                    .isNotEmpty) {
+                                              unidadSeleccionada =
+                                                  producto['unidad'];
+                                            }
+                                          });
+                                        },
                                       ),
-                                      trailing: seleccionado
-                                          ? const CircleAvatar(
-                                              radius: 12,
-                                              backgroundColor:
-                                                  Color(0xFFde2924),
-                                              child: Icon(Icons.check,
-                                                  color: Colors.white,
-                                                  size: 14),
-                                            )
-                                          : null,
-                                      onTap: () {
-                                        setState(() {
-                                          productoSeleccionado =
-                                              producto['nombre_producto'];
-                                          skuSeleccionado = producto['sku'];
-                                          if (producto['unidad'] != null &&
-                                              producto['unidad']
-                                                  .toString()
-                                                  .isNotEmpty) {
-                                            unidadSeleccionada =
-                                                producto['unidad'];
-                                          }
-                                        });
-                                      },
                                     );
                                   },
                                 ),
