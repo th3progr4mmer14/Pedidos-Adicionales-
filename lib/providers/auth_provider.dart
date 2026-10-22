@@ -85,6 +85,13 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
+  Future<void> aceptarPoliticas(String politicasVersion) async {
+    final perfilFresco = await _authService.aceptarPoliticas(politicasVersion);
+    await TokenStorage.instance.actualizarPerfil(perfilFresco.toJson());
+    _perfil = perfilFresco;
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     await TokenStorage.instance.borrarSesion();
     _perfil = null;

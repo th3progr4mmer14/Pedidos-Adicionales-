@@ -46,4 +46,14 @@ class AuthService {
     final response = await _api.get('/auth/me');
     return Perfil.fromJson(response.data as Map<String, dynamic>);
   }
+
+  /// Acepta (o re-acepta, si subió la versión) el aviso de privacidad y los
+  /// términos vigentes. El backend valida que sea la versión vigente y
+  /// guarda la fecha con su propio reloj.
+  Future<Perfil> aceptarPoliticas(String politicasVersion) async {
+    final response = await _api.post('/politicas/aceptar', data: {
+      'politicasVersion': politicasVersion,
+    });
+    return Perfil.fromJson(response.data as Map<String, dynamic>);
+  }
 }
