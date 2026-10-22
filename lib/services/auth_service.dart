@@ -21,11 +21,13 @@ class AuthService {
     required String numeroEmpleado,
     required String passwordTemporal,
     required String passwordNueva,
+    String? politicasVersion,
   }) async {
     final response = await _api.post('/auth/activar', data: {
       'numeroEmpleado': numeroEmpleado,
       'passwordTemporal': passwordTemporal,
       'passwordNueva': passwordNueva,
+      'politicasVersion': politicasVersion,
     });
     return Sesion.fromJson(response.data as Map<String, dynamic>);
   }

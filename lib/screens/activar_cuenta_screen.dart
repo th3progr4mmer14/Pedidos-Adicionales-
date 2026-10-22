@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../config/api_config.dart';
+import '../models/legal_texts.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_exception.dart';
 import '../services/politica_password.dart';
+import 'consentimiento_politicas.dart';
 import 'pantalla_post_login.dart';
 
 /// Pantalla de activación de cuenta: cambia la contraseña temporal que dio
@@ -27,6 +29,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
   final confirmarController = TextEditingController();
 
   bool cargando = false;
+  bool aceptoPoliticas = false;
   String? error;
   String? mensajeEspera;
   Timer? _esperaTimer;
@@ -58,6 +61,10 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
       setState(() => error = errorPolitica);
       return;
     }
+    if (!aceptoPoliticas) {
+      setState(() => error = 'Debes aceptar el aviso de privacidad y los términos');
+      return;
+    }
 
     setState(() {
       cargando = true;
@@ -78,6 +85,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
         numeroEmpleado: widget.numeroEmpleado,
         passwordTemporal: passwordTemporal,
         passwordNueva: passwordNueva,
+        politicasVersion: LegalTexts.version,
       );
       if (!mounted) return;
       irAPantallaSegunPerfil(context, auth.perfil!);
@@ -179,6 +187,14 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
                 style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
               ),
 
+              const SizedBox(height: 16),
+              ConsentimientoPoliticas(
+                value: aceptoPoliticas,
+                onChanged: cargando
+                    ? (_) {}
+                    : (v) => setState(() => aceptoPoliticas = v),
+              ),
+
               if (error != null) ...[
                 const SizedBox(height: 16),
                 Text(
@@ -209,7 +225,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: cargando ? null : _activar,
+                  onPressed: (cargando || !aceptoPoliticas) ? null : _activar,
                   child: cargando
                       ? const SizedBox(
                           width: 22,

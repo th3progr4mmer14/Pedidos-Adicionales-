@@ -64,11 +64,13 @@ class AuthProvider extends ChangeNotifier {
     required String numeroEmpleado,
     required String passwordTemporal,
     required String passwordNueva,
+    String? politicasVersion,
   }) async {
     final sesion = await _authService.activar(
       numeroEmpleado: numeroEmpleado,
       passwordTemporal: passwordTemporal,
       passwordNueva: passwordNueva,
+      politicasVersion: politicasVersion,
     );
     await _guardarSesion(sesion);
   }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/user_profile.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_controller.dart';
+import 'ajustes_screen.dart';
 import 'cambiar_password_screen.dart';
 import 'historial_screen.dart';
 import 'login_screen.dart';
@@ -107,7 +110,20 @@ class PedidosScreen extends StatelessWidget {
                                 color: Colors.white, size: 20),
                           ),
                           onSelected: (opcion) {
-                            if (opcion == 'password') {
+                            if (opcion == 'ajustes') {
+                              final perfil = context.read<AuthProvider>().perfil;
+                              if (perfil == null) return;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => AjustesScreen(
+                                    user: UserProfile.fromPerfil(perfil),
+                                    themeController: context.read<ThemeController>(),
+                                    onLogout: () => _cerrarSesion(context),
+                                  ),
+                                ),
+                              );
+                            } else if (opcion == 'password') {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -119,6 +135,16 @@ class PedidosScreen extends StatelessWidget {
                             }
                           },
                           itemBuilder: (context) => const [
+                            PopupMenuItem(
+                              value: 'ajustes',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.settings_outlined, size: 18),
+                                  SizedBox(width: 10),
+                                  Text('Ajustes'),
+                                ],
+                              ),
+                            ),
                             PopupMenuItem(
                               value: 'password',
                               child: Row(
