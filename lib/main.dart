@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider(create: (_) => PedidoProvider()),
-        Provider.value(value: themeController),
+        ChangeNotifierProvider<ThemeController>.value(value: themeController),
       ],
       child: ValueListenableBuilder<ThemeMode>(
         valueListenable: themeController,
