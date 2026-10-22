@@ -83,8 +83,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: scheme.surface,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -115,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: "Número de empleado",
                   prefixIcon: const Icon(Icons.person),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: scheme.surfaceContainerHighest,
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
@@ -135,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: "Contraseña",
                   prefixIcon: const Icon(Icons.lock),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: scheme.surfaceContainerHighest,
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
@@ -156,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 Text(
                   mensajeEspera!,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
                   textAlign: TextAlign.center,
                 ),
               ],

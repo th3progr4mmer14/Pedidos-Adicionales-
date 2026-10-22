@@ -78,10 +78,11 @@ class _ReaceptarPoliticasScreenState extends State<ReaceptarPoliticasScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F6FA),
+        backgroundColor: scheme.surface,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -105,7 +106,7 @@ class _ReaceptarPoliticasScreenState extends State<ReaceptarPoliticasScreen> {
                     'Para seguir usando la app necesitas aceptar la versión '
                     'más reciente del aviso de privacidad y los términos.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                    style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
                   ),
                   const SizedBox(height: 24),
 
@@ -127,7 +128,7 @@ class _ReaceptarPoliticasScreenState extends State<ReaceptarPoliticasScreen> {
                     const SizedBox(height: 16),
                     Text(
                       mensajeEspera!,
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
                       textAlign: TextAlign.center,
                     ),
                   ],

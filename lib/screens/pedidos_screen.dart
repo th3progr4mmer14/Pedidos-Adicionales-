@@ -30,8 +30,9 @@ class PedidosScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: scheme.surface,
       body: Column(
         children: [
           // ── Header ──
@@ -65,7 +66,7 @@ class PedidosScreen extends StatelessWidget {
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: const Icon(
@@ -80,7 +81,7 @@ class PedidosScreen extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(
@@ -103,7 +104,7 @@ class PedidosScreen extends StatelessWidget {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(Icons.more_vert_rounded,
@@ -183,7 +184,7 @@ class PedidosScreen extends StatelessWidget {
                     Text(
                       "Crea y gestiona tus pedidos fácilmente",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.75),
+                        color: Colors.white.withValues(alpha: 0.75),
                         fontSize: 14,
                       ),
                     ),
@@ -225,7 +226,7 @@ class PedidosScreen extends StatelessWidget {
                         boxShadow: [
                           BoxShadow(
                             color:
-                                const Color(0xFFde2924).withOpacity(0.4),
+                                const Color(0xFFde2924).withValues(alpha: 0.4),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -297,7 +298,7 @@ class PedidosScreen extends StatelessWidget {
                         boxShadow: [
                           BoxShadow(
                             color:
-                                const Color(0xFF9b101a).withOpacity(0.3),
+                                const Color(0xFF9b101a).withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -351,11 +352,11 @@ class PedidosScreen extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: scheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -366,19 +367,19 @@ class PedidosScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFfde521).withOpacity(0.2),
+                            color: const Color(0xFFfde521).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.info_outline_rounded,
                               color: Color(0xFFe8a042), size: 24),
                         ),
                         const SizedBox(width: 16),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             "Selecciona productos del catálogo, define cantidades y exporta tu pedido en Excel.",
                             style: TextStyle(
                               fontSize: 13,
-                              color: Color(0xFF666666),
+                              color: scheme.onSurfaceVariant,
                               height: 1.5,
                             ),
                           ),

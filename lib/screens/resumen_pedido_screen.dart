@@ -141,9 +141,10 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
     final pedidoProvider = context.watch<PedidoProvider>();
     final items = pedidoProvider.items;
     final guardado = pedidoProvider.pedidoGuardado;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: scheme.surface,
       body: items.isEmpty
           ? Column(
               children: [
@@ -170,7 +171,7 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Icon(
@@ -193,25 +194,25 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                     ),
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.shopping_cart_outlined,
-                            size: 72, color: Colors.grey),
-                        SizedBox(height: 16),
+                            size: 72, color: scheme.onSurfaceVariant),
+                        const SizedBox(height: 16),
                         Text(
                           "Tu pedido está vacío",
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF444444)),
+                              color: scheme.onSurface),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           "Agrega productos desde el catálogo",
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
                         ),
                       ],
                     ),
@@ -248,7 +249,7 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: const Icon(
@@ -277,7 +278,7 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                               Text(
                                 widget.storeName,
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.85),
+                                  color: Colors.white.withValues(alpha: 0.85),
                                   fontSize: 14,
                                 ),
                               ),
@@ -316,11 +317,11 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: scheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -361,10 +362,10 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                                   children: [
                                     Text(
                                       producto.nombre,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 14,
-                                        color: Color(0xFF1a1a1a),
+                                        color: scheme.onSurface,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -375,7 +376,7 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                                               horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFed5c32)
-                                                .withOpacity(0.12),
+                                                .withValues(alpha: 0.12),
                                             borderRadius:
                                                 BorderRadius.circular(6),
                                           ),
@@ -397,7 +398,7 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                                               producto.observaciones!,
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.grey.shade500,
+                                                color: scheme.onSurfaceVariant,
                                                 fontStyle: FontStyle.italic,
                                               ),
                                               overflow: TextOverflow.ellipsis,
@@ -446,13 +447,17 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: (guardado ? Colors.grey : Colors.red)
-                                        .withOpacity(0.08),
+                                    color: (guardado
+                                            ? scheme.onSurfaceVariant
+                                            : Colors.red)
+                                        .withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
                                       Icons.delete_outline_rounded,
-                                      color: guardado ? Colors.grey : Colors.red,
+                                      color: guardado
+                                          ? scheme.onSurfaceVariant
+                                          : Colors.red,
                                       size: 20),
                                 ),
                               ),
@@ -468,14 +473,14 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: scheme.surfaceContainerHighest,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(28),
                       topRight: Radius.circular(28),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 20,
                         offset: const Offset(0, -4),
                       ),
@@ -487,17 +492,17 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
+                          color: scheme.surface,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               "Total de artículos",
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: Color(0xFF444444),
+                                color: scheme.onSurfaceVariant,
                               ),
                             ),
                             Text(
@@ -519,10 +524,10 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.08),
+                            color: Colors.green.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                                color: Colors.green.withOpacity(0.3)),
+                                color: Colors.green.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             children: [
@@ -555,7 +560,7 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                             Expanded(
                               child: Text(
                                 fase ?? '',
-                                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
                               ),
                             ),
                           ],
@@ -634,7 +639,7 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                                 borderRadius: BorderRadius.circular(16)),
                             elevation: 4,
                             shadowColor:
-                                const Color(0xFF9b101a).withOpacity(0.4),
+                                const Color(0xFF9b101a).withValues(alpha: 0.4),
                           ),
                           onPressed: procesando
                               ? null
@@ -649,11 +654,15 @@ class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
                         height: 44,
                         child: TextButton.icon(
                           icon: Icon(Icons.delete_sweep_rounded,
-                              color: guardado ? Colors.grey.shade300 : Colors.grey,
+                              color: guardado
+                                  ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
+                                  : scheme.onSurfaceVariant,
                               size: 18),
                           label: Text("Limpiar pedido",
                               style: TextStyle(
-                                  color: guardado ? Colors.grey.shade300 : Colors.grey,
+                                  color: guardado
+                                      ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
+                                      : scheme.onSurfaceVariant,
                                   fontSize: 14)),
                           onPressed: guardado
                               ? null

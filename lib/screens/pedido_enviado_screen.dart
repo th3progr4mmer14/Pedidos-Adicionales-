@@ -45,8 +45,9 @@ class _PedidoEnviadoScreenState extends State<PedidoEnviadoScreen>
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -68,7 +69,7 @@ class _PedidoEnviadoScreenState extends State<PedidoEnviadoScreen>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withOpacity(0.35),
+                        color: Colors.green.withValues(alpha: 0.35),
                         blurRadius: 30,
                         offset: const Offset(0, 12),
                       ),
@@ -88,12 +89,12 @@ class _PedidoEnviadoScreenState extends State<PedidoEnviadoScreen>
                 opacity: _fadeAnim,
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       "¡Pedido enviado!",
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w900,
-                        color: Color(0xFF1a1a1a),
+                        color: scheme.onSurface,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -105,7 +106,7 @@ class _PedidoEnviadoScreenState extends State<PedidoEnviadoScreen>
                           "Tu pedido fue exportado y compartido exitosamente.",
                       style: TextStyle(
                         fontSize: 15,
-                        color: Colors.grey.shade600,
+                        color: scheme.onSurfaceVariant,
                         height: 1.5,
                       ),
                       textAlign: TextAlign.center,
@@ -127,7 +128,7 @@ class _PedidoEnviadoScreenState extends State<PedidoEnviadoScreen>
                         boxShadow: [
                           BoxShadow(
                             color:
-                                const Color(0xFFde2924).withOpacity(0.3),
+                                const Color(0xFFde2924).withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -156,7 +157,7 @@ class _PedidoEnviadoScreenState extends State<PedidoEnviadoScreen>
                                 Text(
                                   "Listo para entregar al área correspondiente",
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.75),
+                                    color: Colors.white.withValues(alpha: 0.75),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -181,7 +182,7 @@ class _PedidoEnviadoScreenState extends State<PedidoEnviadoScreen>
                           ),
                           elevation: 4,
                           shadowColor:
-                              const Color(0xFF9b101a).withOpacity(0.4),
+                              const Color(0xFF9b101a).withValues(alpha: 0.4),
                         ),
                         onPressed: () {
                           final perfil = context.read<AuthProvider>().perfil;

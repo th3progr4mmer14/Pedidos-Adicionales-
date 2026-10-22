@@ -70,8 +70,10 @@ class _TiendaScreenState extends State<TiendaScreen> {
     final filtradas = _filtrar(tiendas);
     final plazas = tiendas.map((t) => t.plaza).whereType<String>().toSet().toList()..sort();
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: scheme.surface,
       body: Column(
         children: [
           Container(
@@ -110,7 +112,7 @@ class _TiendaScreenState extends State<TiendaScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(Icons.logout_rounded,
@@ -133,7 +135,7 @@ class _TiendaScreenState extends State<TiendaScreen> {
                     Text(
                       "${filtradas.length} de ${tiendas.length} tiendas",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.75),
+                        color: Colors.white.withValues(alpha: 0.75),
                         fontSize: 14,
                       ),
                     ),
@@ -179,7 +181,7 @@ class _TiendaScreenState extends State<TiendaScreen> {
                                   decoration: BoxDecoration(
                                     color: seleccionada
                                         ? Colors.white
-                                        : Colors.white.withOpacity(0.2),
+                                        : Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(
@@ -210,16 +212,16 @@ class _TiendaScreenState extends State<TiendaScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.store_outlined, size: 56, color: Colors.grey.shade300),
+                        Icon(Icons.store_outlined, size: 56, color: scheme.onSurfaceVariant),
                         const SizedBox(height: 12),
                         Text(
                           "No tienes tiendas asignadas",
-                          style: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 15),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "Pide a un administrador que te asigne una",
-                          style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
                         ),
                       ],
                     ),
@@ -228,7 +230,7 @@ class _TiendaScreenState extends State<TiendaScreen> {
                     ? Center(
                         child: Text(
                           "No se encontró ninguna tienda",
-                          style: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 15),
                         ),
                       )
                     : ListView.builder(
@@ -241,11 +243,11 @@ class _TiendaScreenState extends State<TiendaScreen> {
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 14),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: scheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFde2924).withOpacity(0.1),
+                                    color: const Color(0xFFde2924).withValues(alpha: 0.1),
                                     blurRadius: 16,
                                     offset: const Offset(0, 6),
                                   ),
@@ -276,10 +278,10 @@ class _TiendaScreenState extends State<TiendaScreen> {
                                         children: [
                                           Text(
                                             tienda.nombre,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.w800,
                                               fontSize: 15,
-                                              color: Color(0xFF1a1a1a),
+                                              color: scheme.onSurface,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
@@ -287,14 +289,14 @@ class _TiendaScreenState extends State<TiendaScreen> {
                                             "${(tienda.plaza ?? '—').replaceAll('10VHT ', '')}  ·  ${tienda.codigo ?? '—'}",
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.grey.shade500,
+                                              color: scheme.onSurfaceVariant,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                     Icon(Icons.arrow_forward_ios_rounded,
-                                        size: 15, color: Colors.grey.shade400),
+                                        size: 15, color: scheme.onSurfaceVariant),
                                   ],
                                 ),
                               ),
