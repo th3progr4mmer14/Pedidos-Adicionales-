@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'nuevo_pedido_screen.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/auth_provider.dart';
+import 'cambiar_password_screen.dart';
 import 'historial_screen.dart';
+import 'login_screen.dart';
+import 'nuevo_pedido_screen.dart';
 
 class PedidosScreen extends StatelessWidget {
   final String storeName;
@@ -9,6 +14,16 @@ class PedidosScreen extends StatelessWidget {
     super.key,
     required this.storeName,
   });
+
+  Future<void> _cerrarSesion(BuildContext context) async {
+    await context.read<AuthProvider>().logout();
+    if (!context.mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,41 +52,94 @@ class PedidosScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
+                        Row(
+                          children: [
+                            if (Navigator.canPop(context)) ...[
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                      Icons.arrow_back_ios_new_rounded,
+                                      color: Colors.white,
+                                      size: 16),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                            ],
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.store_rounded,
+                                      color: Color(0xFFfde521), size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    storeName,
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        PopupMenuButton<String>(
+                          icon: Container(
+                            width: 40,
+                            height: 40,
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                color: Colors.white,
-                                size: 16),
+                            child: const Icon(Icons.more_vert_rounded,
+                                color: Colors.white, size: 20),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.store_rounded,
-                                  color: Color(0xFFfde521), size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                storeName,
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 12),
+                          onSelected: (opcion) {
+                            if (opcion == 'password') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const CambiarPasswordScreen(),
+                                ),
+                              );
+                            } else if (opcion == 'logout') {
+                              _cerrarSesion(context);
+                            }
+                          },
+                          itemBuilder: (context) => const [
+                            PopupMenuItem(
+                              value: 'password',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.password_rounded, size: 18),
+                                  SizedBox(width: 10),
+                                  Text('Cambiar contraseña'),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            PopupMenuItem(
+                              value: 'logout',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.logout_rounded, size: 18),
+                                  SizedBox(width: 10),
+                                  Text('Cerrar sesión'),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
