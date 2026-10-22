@@ -1,36 +1,146 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
-import '../models/producto_pedido.dart';
+import '../config/api_config.dart';
 import '../providers/pedido_provider.dart';
-import '../services/api_client.dart';
-import '../services/excel_export_service.dart';
-import '../services/pedido_service.dart';
+import '../services/envio_pedido_controller.dart';
 import 'nuevo_pedido_screen.dart';
 import 'pedido_enviado_screen.dart';
 
-class ResumenPedidoScreen extends StatelessWidget {
+class ResumenPedidoScreen extends StatefulWidget {
   final String storeName;
+  final EnvioPedidoController? controller;
 
   ResumenPedidoScreen({
     super.key,
     required this.storeName,
+    this.controller,
   });
 
-  final PedidoService _pedidoService = PedidoService(ApiClient.instance);
+  @override
+  State<ResumenPedidoScreen> createState() => _ResumenPedidoScreenState();
+}
 
-  Future<void> _guardarEnHistorial({
-    required String? tiendaId,
-    required List<ProductoPedido> productos,
-  }) {
-    return _pedidoService.crear(tiendaId: tiendaId, productos: productos);
+class _ResumenPedidoScreenState extends State<ResumenPedidoScreen> {
+  late final EnvioPedidoController _controller =
+      widget.controller ?? EnvioPedidoController();
+
+  bool procesando = false;
+  String? fase;
+  String? error;
+  String? info;
+  Timer? _esperaTimer;
+
+  @override
+  void dispose() {
+    _esperaTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _enviarPedido(PedidoProvider pedidoProvider) async {
+    final yaGuardado = pedidoProvider.pedidoGuardado;
+
+    setState(() {
+      procesando = true;
+      error = null;
+      info = null;
+      fase = yaGuardado ? 'Generando Excel...' : 'Guardando pedido...';
+    });
+
+    if (!yaGuardado) {
+      _esperaTimer = Timer(ApiConfig.avisoServidorDormido, () {
+        if (mounted) {
+          setState(() => fase =
+              'Despertando el servidor, esto puede tardar hasta un minuto...');
+        }
+      });
+    }
+
+    final outcome = await _controller.enviar(
+      yaGuardado: yaGuardado,
+      tiendaId: pedidoProvider.tiendaId,
+      productos: pedidoProvider.items,
+      storeName: widget.storeName,
+      plaza: pedidoProvider.plaza ?? "",
+      cr: pedidoProvider.cr ?? "",
+      totalArticulos: pedidoProvider.totalProductos,
+    );
+
+    _esperaTimer?.cancel();
+    _esperaTimer = null;
+
+    if (outcome.resultado == EnvioPedidoResultado.errorGuardando) {
+      if (mounted) {
+        setState(() {
+          procesando = false;
+          fase = null;
+          error = outcome.mensaje;
+        });
+      }
+      return;
+    }
+
+    // A partir de aquí el pedido ya quedó guardado en el backend (recién o
+    // en un intento anterior): no hay que volver a crearlo.
+    if (!pedidoProvider.pedidoGuardado) {
+      pedidoProvider.marcarPedidoGuardado();
+    }
+
+    switch (outcome.resultado) {
+      case EnvioPedidoResultado.guardadoYCompartido:
+        pedidoProvider.limpiarPedido();
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const PedidoEnviadoScreen()),
+            (route) => false,
+          );
+        }
+        return;
+      case EnvioPedidoResultado.guardadoYArchivado:
+        pedidoProvider.limpiarPedido();
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PedidoEnviadoScreen(
+                mensaje: 'Pedido guardado. El Excel se guardó en:\n${outcome.rutaArchivo}',
+              ),
+            ),
+            (route) => false,
+          );
+        }
+        return;
+      case EnvioPedidoResultado.guardadoSinCompartir:
+        if (mounted) {
+          setState(() {
+            procesando = false;
+            fase = null;
+            info = outcome.mensaje;
+          });
+        }
+        return;
+      case EnvioPedidoResultado.guardadoSinExportar:
+        if (mounted) {
+          setState(() {
+            procesando = false;
+            fase = null;
+            error = outcome.mensaje;
+          });
+        }
+        return;
+      case EnvioPedidoResultado.errorGuardando:
+        return; // ya manejado arriba
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final pedidoProvider = context.watch<PedidoProvider>();
     final items = pedidoProvider.items;
+    final guardado = pedidoProvider.pedidoGuardado;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -165,7 +275,7 @@ class ResumenPedidoScreen extends StatelessWidget {
                                   color: Color(0xFFfde521), size: 16),
                               const SizedBox(width: 6),
                               Text(
-                                storeName,
+                                widget.storeName,
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.85),
                                   fontSize: 14,
@@ -300,46 +410,49 @@ class ResumenPedidoScreen extends StatelessWidget {
                                 ),
                               ),
                               GestureDetector(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(20)),
-                                      title:
-                                          const Text("Eliminar producto"),
-                                      content: Text(
-                                          "¿Eliminar \"${producto.nombre}\"?"),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: const Text("Cancelar"),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            pedidoProvider
-                                                .eliminarProducto(index);
-                                            Navigator.pop(context);
-                                          },
-                                          child: const Text("Eliminar",
-                                              style: TextStyle(
-                                                  color: Colors.red)),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
+                                onTap: guardado
+                                    ? null
+                                    : () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (_) => AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20)),
+                                            title:
+                                                const Text("Eliminar producto"),
+                                            content: Text(
+                                                "¿Eliminar \"${producto.nombre}\"?"),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                                child: const Text("Cancelar"),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  pedidoProvider
+                                                      .eliminarProducto(index);
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text("Eliminar",
+                                                    style: TextStyle(
+                                                        color: Colors.red)),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.08),
+                                    color: (guardado ? Colors.grey : Colors.red)
+                                        .withOpacity(0.08),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                       Icons.delete_outline_rounded,
-                                      color: Colors.red,
+                                      color: guardado ? Colors.grey : Colors.red,
                                       size: 20),
                                 ),
                               ),
@@ -399,6 +512,74 @@ class ResumenPedidoScreen extends StatelessWidget {
                         ),
                       ),
 
+                      if (guardado) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: Colors.green.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_rounded,
+                                  color: Colors.green, size: 18),
+                              const SizedBox(width: 8),
+                              const Expanded(
+                                child: Text(
+                                  "Pedido guardado. Termina de generar o compartir el Excel para continuar.",
+                                  style: TextStyle(
+                                      color: Colors.green, fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      if (procesando) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                fase ?? '',
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      if (!procesando && error != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          error!,
+                          style: const TextStyle(color: Colors.red, fontSize: 13),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+
+                      if (!procesando && info != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          info!,
+                          style: const TextStyle(color: Color(0xFF9b101a), fontSize: 13),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+
                       const SizedBox(height: 12),
 
                       SizedBox(
@@ -414,13 +595,15 @@ class ResumenPedidoScreen extends StatelessWidget {
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),
                           ),
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  NuevoPedidoScreen(storeName: storeName),
-                            ),
-                          ),
+                          onPressed: guardado
+                              ? null
+                              : () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => NuevoPedidoScreen(
+                                          storeName: widget.storeName),
+                                    ),
+                                  ),
                         ),
                       ),
 
@@ -430,11 +613,16 @@ class ResumenPedidoScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 54,
                         child: ElevatedButton.icon(
-                          icon: const Icon(Icons.share_rounded,
+                          icon: Icon(
+                              guardado
+                                  ? Icons.refresh_rounded
+                                  : Icons.share_rounded,
                               color: Colors.white),
-                          label: const Text(
-                            "Exportar y compartir",
-                            style: TextStyle(
+                          label: Text(
+                            guardado
+                                ? "Reintentar exportar y compartir"
+                                : "Exportar y compartir",
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
                               fontSize: 16,
@@ -448,57 +636,9 @@ class ResumenPedidoScreen extends StatelessWidget {
                             shadowColor:
                                 const Color(0xFF9b101a).withOpacity(0.4),
                           ),
-                          onPressed: () async {
-                            try {
-                              final path =
-                                  await ExcelExportService.exportarPedido(
-                                plaza: pedidoProvider.plaza ?? "",
-                                tienda: storeName,
-                                cr: pedidoProvider.cr ?? "",
-                                productos: pedidoProvider.items,
-                              );
-
-                              final result = await Share.shareXFiles(
-                                [XFile(path)],
-                                subject: "Pedido - $storeName",
-                                text:
-                                    "Pedido de $storeName — ${pedidoProvider.totalProductos} artículos",
-                              );
-
-                              if (context.mounted &&
-                                  result.status ==
-                                      ShareResultStatus.success) {
-                                // Guardar el pedido en el backend
-                                await _guardarEnHistorial(
-                                  tiendaId: pedidoProvider.tiendaId,
-                                  productos: pedidoProvider.items,
-                                );
-
-                                pedidoProvider.limpiarPedido();
-
-                                if (context.mounted) {
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          const PedidoEnviadoScreen(),
-                                    ),
-                                    (route) => false,
-                                  );
-                                }
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text("Error al exportar: $e"),
-                                    backgroundColor: Colors.red,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            }
-                          },
+                          onPressed: procesando
+                              ? null
+                              : () => _enviarPedido(pedidoProvider),
                         ),
                       ),
 
@@ -508,40 +648,44 @@ class ResumenPedidoScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 44,
                         child: TextButton.icon(
-                          icon: const Icon(Icons.delete_sweep_rounded,
-                              color: Colors.grey, size: 18),
-                          label: const Text("Limpiar pedido",
+                          icon: Icon(Icons.delete_sweep_rounded,
+                              color: guardado ? Colors.grey.shade300 : Colors.grey,
+                              size: 18),
+                          label: Text("Limpiar pedido",
                               style: TextStyle(
-                                  color: Colors.grey, fontSize: 14)),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(20)),
-                                title: const Text("Limpiar pedido"),
-                                content: const Text(
-                                    "¿Eliminar todos los productos del pedido?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context),
-                                    child: const Text("Cancelar"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      pedidoProvider.limpiarPedido();
-                                      Navigator.pop(context);
-                                    },
-                                    child: const Text("Limpiar",
-                                        style:
-                                            TextStyle(color: Colors.red)),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                                  color: guardado ? Colors.grey.shade300 : Colors.grey,
+                                  fontSize: 14)),
+                          onPressed: guardado
+                              ? null
+                              : () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (_) => AlertDialog(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20)),
+                                      title: const Text("Limpiar pedido"),
+                                      content: const Text(
+                                          "¿Eliminar todos los productos del pedido?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text("Cancelar"),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            pedidoProvider.limpiarPedido();
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text("Limpiar",
+                                              style:
+                                                  TextStyle(color: Colors.red)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
                         ),
                       ),
                     ],

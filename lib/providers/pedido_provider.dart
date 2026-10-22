@@ -10,12 +10,19 @@ class PedidoProvider extends ChangeNotifier {
   String? _storeName;
   String? _plaza;
   String? _cr;
+  bool _pedidoGuardado = false;
 
   List<ProductoPedido> get items => _items;
   String? get tiendaId => _tiendaId;
   String? get storeName => _storeName;
   String? get plaza => _plaza;
   String? get cr => _cr;
+
+  /// true una vez que el pedido actual ya se guardó en el backend
+  /// (POST /pedidos respondió bien). Mientras siga en true, un reintento de
+  /// "exportar y compartir" no debe volver a crear el pedido: solo repite
+  /// la exportación/compartido para evitar pedidos duplicados.
+  bool get pedidoGuardado => _pedidoGuardado;
 
   /// La tienda y la plaza vienen del perfil autenticado, no de una selección
   /// libre: un colaborador solo ve la suya y un asesor solo las que le
@@ -26,6 +33,12 @@ class PedidoProvider extends ChangeNotifier {
     _plaza = tienda.plaza;
     _cr = tienda.codigo;
     _items.clear();
+    _pedidoGuardado = false;
+    notifyListeners();
+  }
+
+  void marcarPedidoGuardado() {
+    _pedidoGuardado = true;
     notifyListeners();
   }
 
@@ -49,6 +62,7 @@ class PedidoProvider extends ChangeNotifier {
 
   void limpiarPedido() {
     _items.clear();
+    _pedidoGuardado = false;
     notifyListeners();
   }
 }

@@ -5,7 +5,9 @@ import '../providers/auth_provider.dart';
 import 'pantalla_post_login.dart';
 
 class PedidoEnviadoScreen extends StatefulWidget {
-  const PedidoEnviadoScreen({super.key});
+  final String? mensaje;
+
+  const PedidoEnviadoScreen({super.key, this.mensaje});
 
   @override
   State<PedidoEnviadoScreen> createState() => _PedidoEnviadoScreenState();
@@ -99,7 +101,8 @@ class _PedidoEnviadoScreenState extends State<PedidoEnviadoScreen>
                     const SizedBox(height: 12),
 
                     Text(
-                      "Tu pedido fue exportado y compartido exitosamente.",
+                      widget.mensaje ??
+                          "Tu pedido fue exportado y compartido exitosamente.",
                       style: TextStyle(
                         fontSize: 15,
                         color: Colors.grey.shade600,
