@@ -3,6 +3,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'providers/auth_provider.dart';
 import 'providers/pedido_provider.dart';
 import 'screens/InicioScreen.dart';
 import 'supabase_config.dart';
@@ -16,21 +17,29 @@ Future<void> main() async {
     anonKey: supabaseAnonKey,
   );
 
+  final authProvider = AuthProvider();
+  await authProvider.restaurarSesion();
+
   FlutterNativeSplash.remove();
 
-  runApp(const MyApp());
+  runApp(MyApp(authProvider: authProvider));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final AuthProvider authProvider;
+
+  const MyApp({super.key, required this.authProvider});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => PedidoProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: authProvider),
+        ChangeNotifierProvider(create: (_) => PedidoProvider()),
+      ],
       child: const MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: const InicioScreen(),
+        home: InicioScreen(),
       ),
     );
   }

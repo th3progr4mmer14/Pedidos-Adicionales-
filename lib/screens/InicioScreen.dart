@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/auth_provider.dart';
+import 'login_screen.dart';
 import 'select_store_screen.dart';
 
 class InicioScreen extends StatefulWidget {
@@ -178,11 +182,14 @@ class _InicioScreenState extends State<InicioScreen>
                                 ),
                               ),
                               onPressed: () {
+                                final estaAutenticado =
+                                    context.read<AuthProvider>().estaAutenticado;
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) =>
-                                        const SelectStoreScreen(),
+                                    builder: (_) => estaAutenticado
+                                        ? const SelectStoreScreen()
+                                        : const LoginScreen(),
                                   ),
                                 );
                               },

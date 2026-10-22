@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/pedido_provider.dart';
 import '../supabase_config.dart';
+import 'login_screen.dart';
 import 'pedidos_screen.dart';
 
 class SelectStoreScreen extends StatefulWidget {
@@ -91,6 +93,16 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
         cargando = false;
       });
     }
+  }
+
+  Future<void> _cerrarSesion(BuildContext context) async {
+    await context.read<AuthProvider>().logout();
+    if (!context.mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   void _abrirBuscador() {
@@ -203,18 +215,36 @@ class _SelectStoreScreenState extends State<SelectStoreScreen>
                               ],
                             ),
                           ),
-                          GestureDetector(
-                            onTap: cargando ? null : _abrirBuscador,
-                            child: Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
+                          Row(
+                            children: [
+                              GestureDetector(
+                                onTap: cargando ? null : _abrirBuscador,
+                                child: Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(Icons.search_rounded,
+                                      color: Colors.white, size: 22),
+                                ),
                               ),
-                              child: const Icon(Icons.search_rounded,
-                                  color: Colors.white, size: 22),
-                            ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => _cerrarSesion(context),
+                                child: Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(Icons.logout_rounded,
+                                      color: Colors.white, size: 20),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
