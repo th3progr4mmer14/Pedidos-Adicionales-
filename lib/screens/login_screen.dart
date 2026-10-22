@@ -7,7 +7,7 @@ import '../config/api_config.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_exception.dart';
 import 'activar_cuenta_screen.dart';
-import 'select_store_screen.dart';
+import 'pantalla_post_login.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -56,12 +56,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await context.read<AuthProvider>().login(numeroEmpleado, password);
+      final auth = context.read<AuthProvider>();
+      await auth.login(numeroEmpleado, password);
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SelectStoreScreen()),
-      );
+      irAPantallaSegunPerfil(context, auth.perfil!);
     } on CuentaPendienteActivacionException {
       if (!mounted) return;
       Navigator.push(

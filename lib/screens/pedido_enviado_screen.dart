@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'select_store_screen.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/auth_provider.dart';
+import 'pantalla_post_login.dart';
 
 class PedidoEnviadoScreen extends StatefulWidget {
   const PedidoEnviadoScreen({super.key});
@@ -178,13 +181,10 @@ class _PedidoEnviadoScreenState extends State<PedidoEnviadoScreen>
                               const Color(0xFF9b101a).withOpacity(0.4),
                         ),
                         onPressed: () {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SelectStoreScreen(),
-                            ),
-                            (route) => false,
-                          );
+                          final perfil = context.read<AuthProvider>().perfil;
+                          if (perfil != null) {
+                            irAPantallaSegunPerfil(context, perfil);
+                          }
                         },
                         icon: const Icon(Icons.home_rounded,
                             color: Colors.white),

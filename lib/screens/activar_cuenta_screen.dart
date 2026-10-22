@@ -7,7 +7,7 @@ import '../config/api_config.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_exception.dart';
 import '../services/politica_password.dart';
-import 'select_store_screen.dart';
+import 'pantalla_post_login.dart';
 
 /// Pantalla de activación de cuenta: cambia la contraseña temporal que dio
 /// el administrador por una propia. Se llega aquí cuando /auth/login
@@ -73,17 +73,14 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
     });
 
     try {
-      await context.read<AuthProvider>().activar(
-            numeroEmpleado: widget.numeroEmpleado,
-            passwordTemporal: passwordTemporal,
-            passwordNueva: passwordNueva,
-          );
-      if (!mounted) return;
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const SelectStoreScreen()),
-        (route) => false,
+      final auth = context.read<AuthProvider>();
+      await auth.activar(
+        numeroEmpleado: widget.numeroEmpleado,
+        passwordTemporal: passwordTemporal,
+        passwordNueva: passwordNueva,
       );
+      if (!mounted) return;
+      irAPantallaSegunPerfil(context, auth.perfil!);
     } on ApiException catch (e) {
       if (mounted) setState(() => error = e.mensaje);
     } finally {

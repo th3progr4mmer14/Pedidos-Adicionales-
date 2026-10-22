@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
 import '../supabase_config.dart';
 
 class HistorialScreen extends StatefulWidget {
