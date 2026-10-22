@@ -1,5 +1,12 @@
-import 'package:flutter/material.dart'; 
-import '../supabase_config.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import '../config/api_config.dart';
+import '../models/pedido_historial.dart';
+import '../services/api_client.dart';
+import '../services/api_exception.dart';
+import '../services/pedido_service.dart';
 
 class HistorialScreen extends StatefulWidget {
   const HistorialScreen({super.key});
@@ -9,9 +16,13 @@ class HistorialScreen extends StatefulWidget {
 }
 
 class _HistorialScreenState extends State<HistorialScreen> {
-  List<Map<String, dynamic>> pedidos = [];
+  final PedidoService _pedidoService = PedidoService(ApiClient.instance);
+
+  List<PedidoHistorial> pedidos = [];
   bool cargando = true;
   String? errorCarga;
+  String? mensajeEspera;
+  Timer? _esperaTimer;
 
   @override
   void initState() {
@@ -19,35 +30,43 @@ class _HistorialScreenState extends State<HistorialScreen> {
     _cargarHistorial();
   }
 
-  Future<void> _cargarHistorial() async {
-    try {
-      final response = await supabase
-          .from('pedidos')
-          .select(
-              'id_pedido, fecha_pedido, nombre_tienda, codigo_tienda, plaza, total_articulos, estatus')
-          .order('fecha_pedido', ascending: false)
-          .limit(100);
+  @override
+  void dispose() {
+    _esperaTimer?.cancel();
+    super.dispose();
+  }
 
+  Future<void> _cargarHistorial() async {
+    _esperaTimer = Timer(ApiConfig.avisoServidorDormido, () {
+      if (mounted) {
+        setState(() => mensajeEspera =
+            'Despertando el servidor, esto puede tardar hasta un minuto...');
+      }
+    });
+
+    try {
+      final resultado = await _pedidoService.listarRecientes(limite: 100);
       setState(() {
-        pedidos = List<Map<String, dynamic>>.from(response);
+        pedidos = resultado;
         cargando = false;
       });
-    } catch (e) {
+    } on ApiException catch (e) {
       setState(() {
-        errorCarga = 'Error al cargar el historial';
+        errorCarga = e.mensaje;
         cargando = false;
       });
+    } finally {
+      _esperaTimer?.cancel();
+      if (mounted) setState(() => mensajeEspera = null);
     }
   }
 
-  String _formatearFecha(String? fechaStr) {
-    if (fechaStr == null) return '—';
-    final fecha = DateTime.tryParse(fechaStr);
-    if (fecha == null) return '—';
-    return "${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}/${fecha.year}  ${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}";
+  String _formatearFecha(DateTime fecha) {
+    final local = fecha.toLocal();
+    return "${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}/${local.year}  ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}";
   }
 
-  void _verDetalle(BuildContext context, Map<String, dynamic> pedido) {
+  void _verDetalle(BuildContext context, PedidoHistorial pedido) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -123,14 +142,15 @@ class _HistorialScreenState extends State<HistorialScreen> {
           // ── Contenido ──
           Expanded(
             child: cargando
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(color: Color(0xFFde2924)),
-                        SizedBox(height: 16),
-                        Text("Cargando historial...",
-                            style: TextStyle(color: Color(0xFF666666))),
+                        const CircularProgressIndicator(color: Color(0xFFde2924)),
+                        const SizedBox(height: 16),
+                        Text(mensajeEspera ?? "Cargando historial...",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Color(0xFF666666))),
                       ],
                     ),
                   )
@@ -143,6 +163,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                 color: Colors.grey, size: 56),
                             const SizedBox(height: 12),
                             Text(errorCarga!,
+                                textAlign: TextAlign.center,
                                 style:
                                     const TextStyle(color: Colors.grey)),
                             const SizedBox(height: 16),
@@ -251,9 +272,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  pedido[
-                                                          'nombre_tienda'] ??
-                                                      '—',
+                                                  pedido.nombreTienda,
                                                   style: const TextStyle(
                                                     fontWeight:
                                                         FontWeight.w800,
@@ -264,7 +283,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  "${pedido['plaza']?.toString().replaceAll('10VHT ', '') ?? '—'}  ·  ${pedido['codigo_tienda'] ?? '—'}",
+                                                  "${(pedido.plaza ?? '—').replaceAll('10VHT ', '')}  ·  ${pedido.codigoTienda ?? '—'}",
                                                   style: TextStyle(
                                                     fontSize: 12,
                                                     color: Colors
@@ -290,7 +309,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                                                 .circular(8),
                                                       ),
                                                       child: Text(
-                                                        "${pedido['total_articulos'] ?? 0} artículos",
+                                                        "${pedido.totalArticulos} artículos",
                                                         style:
                                                             const TextStyle(
                                                           fontSize: 11,
@@ -303,9 +322,8 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                                     ),
                                                     const SizedBox(width: 8),
                                                     Text(
-                                                      _formatearFecha(pedido[
-                                                              'fecha_pedido']
-                                                          ?.toString()),
+                                                      _formatearFecha(
+                                                          pedido.fechaPedido),
                                                       style: TextStyle(
                                                         fontSize: 11,
                                                         color: Colors
@@ -338,51 +356,19 @@ class _HistorialScreenState extends State<HistorialScreen> {
 }
 
 // ── Pantalla de detalle ──
-class DetallePedidoScreen extends StatefulWidget {
-  final Map<String, dynamic> pedido;
+class DetallePedidoScreen extends StatelessWidget {
+  final PedidoHistorial pedido;
 
   const DetallePedidoScreen({super.key, required this.pedido});
 
-  @override
-  State<DetallePedidoScreen> createState() => _DetallePedidoScreenState();
-}
-
-class _DetallePedidoScreenState extends State<DetallePedidoScreen> {
-  List<Map<String, dynamic>> detalle = [];
-  bool cargando = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _cargarDetalle();
-  }
-
-  Future<void> _cargarDetalle() async {
-    try {
-      final response = await supabase
-          .from('detalle_pedido')
-          .select('nombre_producto, sku, cantidad, unidad, observaciones')
-          .eq('id_pedido', widget.pedido['id_pedido']);
-
-      setState(() {
-        detalle = List<Map<String, dynamic>>.from(response);
-        cargando = false;
-      });
-    } catch (e) {
-      setState(() => cargando = false);
-    }
-  }
-
-  String _formatearFecha(String? fechaStr) {
-    if (fechaStr == null) return '—';
-    final fecha = DateTime.tryParse(fechaStr);
-    if (fecha == null) return '—';
-    return "${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}/${fecha.year}  ${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}";
+  String _formatearFecha(DateTime fecha) {
+    final local = fecha.toLocal();
+    return "${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}/${local.year}  ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}";
   }
 
   @override
   Widget build(BuildContext context) {
-    final pedido = widget.pedido;
+    final detalle = pedido.detalles;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -422,7 +408,7 @@ class _DetallePedidoScreenState extends State<DetallePedidoScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      pedido['nombre_tienda'] ?? '—',
+                      pedido.nombreTienda,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -436,8 +422,7 @@ class _DetallePedidoScreenState extends State<DetallePedidoScreen> {
                             color: Color(0xFFfde521), size: 14),
                         const SizedBox(width: 6),
                         Text(
-                          _formatearFecha(
-                              pedido['fecha_pedido']?.toString()),
+                          _formatearFecha(pedido.fechaPedido),
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.85),
                             fontSize: 13,
@@ -456,7 +441,7 @@ class _DetallePedidoScreenState extends State<DetallePedidoScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            "${pedido['total_articulos'] ?? 0} artículos",
+                            "${pedido.totalArticulos} artículos",
                             style: const TextStyle(
                               color: Color(0xFF9b101a),
                               fontWeight: FontWeight.w800,
@@ -466,7 +451,7 @@ class _DetallePedidoScreenState extends State<DetallePedidoScreen> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          "${pedido['plaza']?.toString().replaceAll('10VHT ', '') ?? '—'}  ·  ${pedido['codigo_tienda'] ?? '—'}",
+                          "${(pedido.plaza ?? '—').replaceAll('10VHT ', '')}  ·  ${pedido.codigoTienda ?? '—'}",
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.75),
                             fontSize: 13,
@@ -482,148 +467,141 @@ class _DetallePedidoScreenState extends State<DetallePedidoScreen> {
 
           // ── Lista productos ──
           Expanded(
-            child: cargando
-                ? const Center(
-                    child: CircularProgressIndicator(
-                        color: Color(0xFFde2924)),
+            child: detalle.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inventory_2_outlined,
+                            size: 56, color: Colors.grey.shade300),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Sin detalle disponible",
+                          style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 15),
+                        ),
+                      ],
+                    ),
                   )
-                : detalle.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.inventory_2_outlined,
-                                size: 56, color: Colors.grey.shade300),
-                            const SizedBox(height: 12),
-                            Text(
-                              "Sin detalle disponible",
-                              style: TextStyle(
-                                  color: Colors.grey.shade400,
-                                  fontSize: 15),
+                : ListView.builder(
+                    padding:
+                        const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                    itemCount: detalle.length,
+                    itemBuilder: (context, index) {
+                      final item = detalle[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
                             ),
                           ],
                         ),
-                      )
-                    : ListView.builder(
-                        padding:
-                            const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                        itemCount: detalle.length,
-                        itemBuilder: (context, index) {
-                          final item = detalle[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF9b101a),
+                                      Color(0xFFde2924)
+                                    ],
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.circular(10),
                                 ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF9b101a),
-                                          Color(0xFFde2924)
-                                        ],
-                                      ),
-                                      borderRadius:
-                                          BorderRadius.circular(10),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        "${index + 1}",
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 13,
-                                        ),
-                                      ),
+                                child: Center(
+                                  child: Text(
+                                    "${index + 1}",
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 13,
                                     ),
                                   ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.nombreProducto,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14,
+                                        color: Color(0xFF1a1a1a),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
                                       children: [
+                                        Container(
+                                          padding:
+                                              const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                                    0xFFed5c32)
+                                                .withOpacity(0.12),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            "${item.cantidad} ${item.unidad ?? ''}",
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFFed5c32),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
                                         Text(
-                                          item['nombre_producto'] ?? '—',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 14,
-                                            color: Color(0xFF1a1a1a),
+                                          item.sku ?? '',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade500,
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: const Color(
-                                                        0xFFed5c32)
-                                                    .withOpacity(0.12),
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                "${item['cantidad']} ${item['unidad']}",
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: Color(0xFFed5c32),
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              item['sku'] ?? '',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey.shade500,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        if (item['observaciones'] != null &&
-                                            item['observaciones']
-                                                .toString()
-                                                .isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                                top: 4),
-                                            child: Text(
-                                              item['observaciones'],
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey.shade500,
-                                                fontStyle: FontStyle.italic,
-                                              ),
-                                            ),
-                                          ),
                                       ],
                                     ),
-                                  ),
-                                ],
+                                    if (item.observaciones != null &&
+                                        item.observaciones!.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            top: 4),
+                                        child: Text(
+                                          item.observaciones!,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade500,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

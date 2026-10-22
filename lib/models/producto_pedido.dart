@@ -1,4 +1,5 @@
 class ProductoPedido {
+  final String? productoId;
   final String nombre;
   final String sku;
   final int cantidad;
@@ -6,6 +7,7 @@ class ProductoPedido {
   final String? observaciones;
 
   ProductoPedido({
+    this.productoId,
     required this.nombre,
     required this.sku,
     required this.cantidad,

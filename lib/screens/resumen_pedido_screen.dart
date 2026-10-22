@@ -2,58 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../models/producto_pedido.dart';
 import '../providers/pedido_provider.dart';
+import '../services/api_client.dart';
 import '../services/excel_export_service.dart';
-import '../supabase_config.dart';
+import '../services/pedido_service.dart';
 import 'nuevo_pedido_screen.dart';
 import 'pedido_enviado_screen.dart';
 
 class ResumenPedidoScreen extends StatelessWidget {
   final String storeName;
 
-  const ResumenPedidoScreen({
+  ResumenPedidoScreen({
     super.key,
     required this.storeName,
   });
 
+  final PedidoService _pedidoService = PedidoService(ApiClient.instance);
+
   Future<void> _guardarEnHistorial({
-    required String nombreTienda,
-    required String codigoTienda,
-    required String plaza,
-    required int totalArticulos,
-    required List productos,
-  }) async {
-    try {
-      // 1. Insertar pedido y obtener el id generado
-      final pedidoResponse = await supabase
-          .from('pedidos')
-          .insert({
-            'nombre_tienda': nombreTienda,
-            'codigo_tienda': codigoTienda,
-            'plaza': plaza,
-            'total_articulos': totalArticulos,
-            'estatus': 'enviado',
-            'fecha_pedido': DateTime.now().toIso8601String(),
-          })
-          .select('id_pedido')
-          .single();
-
-      final idPedido = pedidoResponse['id_pedido'];
-
-      // 2. Insertar detalle de productos
-      final detalles = productos.map((p) => {
-        'id_pedido': idPedido,
-        'nombre_producto': p.nombre,
-        'sku': p.sku,
-        'cantidad': p.cantidad,
-        'unidad': p.unidad,
-        'observaciones': p.observaciones ?? '',
-      }).toList();
-
-      await supabase.from('detalle_pedido').insert(detalles);
-    } catch (e) {
-      debugPrint('Error al guardar en historial: $e');
-    }
+    required String? tiendaId,
+    required List<ProductoPedido> productos,
+  }) {
+    return _pedidoService.crear(tiendaId: tiendaId, productos: productos);
   }
 
   @override
@@ -497,13 +468,9 @@ class ResumenPedidoScreen extends StatelessWidget {
                               if (context.mounted &&
                                   result.status ==
                                       ShareResultStatus.success) {
-                                // Guardar pedido + detalle en Supabase
+                                // Guardar el pedido en el backend
                                 await _guardarEnHistorial(
-                                  nombreTienda: storeName,
-                                  codigoTienda: pedidoProvider.cr ?? "",
-                                  plaza: pedidoProvider.plaza ?? "",
-                                  totalArticulos:
-                                      pedidoProvider.totalProductos,
+                                  tiendaId: pedidoProvider.tiendaId,
                                   productos: pedidoProvider.items,
                                 );
 

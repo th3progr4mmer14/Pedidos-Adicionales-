@@ -1,8 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/pedido_provider.dart';
+import '../config/api_config.dart';
+import '../models/producto.dart';
 import '../models/producto_pedido.dart';
-import '../supabase_config.dart';
+import '../providers/pedido_provider.dart';
+import '../services/api_client.dart';
+import '../services/api_exception.dart';
+import '../services/producto_service.dart';
 import 'resumen_pedido_screen.dart';
 
 class NuevoPedidoScreen extends StatefulWidget {
@@ -22,16 +28,21 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
   final TextEditingController cantidadController = TextEditingController();
   final TextEditingController observacionesController = TextEditingController();
 
+  final ProductoService _productoService = ProductoService(ApiClient.instance);
+
+  String? productoIdSeleccionado;
   String? productoSeleccionado;
   String? skuSeleccionado;
   String unidadSeleccionada = "Pieza";
   String? supergrupoSeleccionado;
 
-  List<Map<String, dynamic>> catalogo = [];
-  List<Map<String, dynamic>> productosFiltrados = [];
+  List<Producto> catalogo = [];
+  List<Producto> productosFiltrados = [];
   List<String> supergrupos = [];
   bool cargando = true;
   String? errorCarga;
+  String? mensajeEspera;
+  Timer? _esperaTimer;
 
   @override
   void initState() {
@@ -41,30 +52,20 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
   }
 
   Future<void> _cargarCatalogo() async {
-    try {
-      List<Map<String, dynamic>> todos = [];
-      int desde = 0;
-      const int bloque = 1000;
-
-      while (true) {
-        final response = await supabase
-            .from('productos')
-            .select('nombre_producto, sku, unidad, supergrupo')
-            .eq('activo', true)
-            .order('nombre_producto')
-            .range(desde, desde + bloque - 1);
-
-        todos.addAll(List<Map<String, dynamic>>.from(response));
-        if (response.length < bloque) break;
-        desde += bloque;
+    _esperaTimer = Timer(ApiConfig.avisoServidorDormido, () {
+      if (mounted) {
+        setState(() => mensajeEspera =
+            'Despertando el servidor, esto puede tardar hasta un minuto...');
       }
+    });
 
-      // Extraer supergrupos únicos
+    try {
+      final todos = await _productoService.listarTodosActivos();
+
       final Set<String> supergruposSet = {};
       for (var p in todos) {
-        if (p['supergrupo'] != null &&
-            p['supergrupo'].toString().isNotEmpty) {
-          supergruposSet.add(p['supergrupo'].toString());
+        if (p.supergrupo != null && p.supergrupo!.isNotEmpty) {
+          supergruposSet.add(p.supergrupo!);
         }
       }
       final listaSupergrupos = supergruposSet.toList()..sort();
@@ -75,11 +76,14 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
         supergrupos = listaSupergrupos;
         cargando = false;
       });
-    } catch (e) {
+    } on ApiException catch (e) {
       setState(() {
-        errorCarga = 'Error al cargar el catálogo';
+        errorCarga = e.mensaje;
         cargando = false;
       });
+    } finally {
+      _esperaTimer?.cancel();
+      if (mounted) setState(() => mensajeEspera = null);
     }
   }
 
@@ -88,11 +92,11 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
     setState(() {
       productosFiltrados = catalogo.where((p) {
         final coincideTexto = query.isEmpty ||
-            p['nombre_producto'].toString().toLowerCase().contains(query) ||
-            p['sku'].toString().toLowerCase().contains(query);
+            p.nombre.toLowerCase().contains(query) ||
+            p.sku.toLowerCase().contains(query);
 
-        final coincideSupergrupo = supergrupoSeleccionado == null ||
-            p['supergrupo'].toString() == supergrupoSeleccionado;
+        final coincideSupergrupo =
+            supergrupoSeleccionado == null || p.supergrupo == supergrupoSeleccionado;
 
         return coincideTexto && coincideSupergrupo;
       }).toList();
@@ -126,6 +130,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
     }
 
     pedidoProvider.agregarProducto(ProductoPedido(
+      productoId: productoIdSeleccionado,
       nombre: productoSeleccionado!,
       sku: skuSeleccionado ?? '',
       cantidad: int.parse(cantidadController.text),
@@ -144,6 +149,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
     );
 
     setState(() {
+      productoIdSeleccionado = null;
       productoSeleccionado = null;
       skuSeleccionado = null;
       cantidadController.clear();
@@ -157,6 +163,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
     searchController.dispose();
     cantidadController.dispose();
     observacionesController.dispose();
+    _esperaTimer?.cancel();
     super.dispose();
   }
 
@@ -168,14 +175,15 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: cargando
-          ? const Center(
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: Color(0xFFde2924)),
-                  SizedBox(height: 16),
-                  Text("Cargando catálogo...",
-                      style: TextStyle(color: Color(0xFF666666))),
+                  const CircularProgressIndicator(color: Color(0xFFde2924)),
+                  const SizedBox(height: 16),
+                  Text(mensajeEspera ?? "Cargando catálogo...",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFF666666))),
                 ],
               ),
             )
@@ -439,8 +447,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                     final producto =
                                         productosFiltrados[index];
                                     final seleccionado =
-                                        productoSeleccionado ==
-                                            producto['nombre_producto'];
+                                        productoIdSeleccionado == producto.id;
 
                                     return Material(
                                       color: Colors.transparent,
@@ -450,7 +457,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                             const Color(0xFFde2924)
                                                 .withOpacity(0.06),
                                         title: Text(
-                                          producto['nombre_producto'],
+                                          producto.nombre,
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: seleccionado
@@ -464,17 +471,14 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                         subtitle: Row(
                                           children: [
                                             Text(
-                                              producto['sku'],
+                                              producto.sku,
                                               style: TextStyle(
                                                   fontSize: 12,
                                                   color:
                                                       Colors.grey.shade500),
                                             ),
-                                            if (producto['supergrupo'] !=
-                                                    null &&
-                                                producto['supergrupo']
-                                                    .toString()
-                                                    .isNotEmpty) ...[
+                                            if (producto.supergrupo != null &&
+                                                producto.supergrupo!.isNotEmpty) ...[
                                               const SizedBox(width: 8),
                                               Container(
                                                 padding:
@@ -490,7 +494,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                                           4),
                                                 ),
                                                 child: Text(
-                                                  producto['supergrupo'],
+                                                  producto.supergrupo!,
                                                   style: const TextStyle(
                                                     fontSize: 10,
                                                     color: Color(0xFFe8a042),
@@ -513,15 +517,12 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                             : null,
                                         onTap: () {
                                           setState(() {
-                                            productoSeleccionado =
-                                                producto['nombre_producto'];
-                                            skuSeleccionado = producto['sku'];
-                                            if (producto['unidad'] != null &&
-                                                producto['unidad']
-                                                    .toString()
-                                                    .isNotEmpty) {
-                                              unidadSeleccionada =
-                                                  producto['unidad'];
+                                            productoIdSeleccionado = producto.id;
+                                            productoSeleccionado = producto.nombre;
+                                            skuSeleccionado = producto.sku;
+                                            if (producto.unidad != null &&
+                                                producto.unidad!.isNotEmpty) {
+                                              unidadSeleccionada = producto.unidad!;
                                             }
                                           });
                                         },
