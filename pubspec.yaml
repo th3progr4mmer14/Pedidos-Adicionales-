@@ -40,7 +40,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   excel: ^4.0.6
   path_provider: ^2.1.5
-  supabase_flutter: ^2.8.4
   flutter_native_splash: ^2.4.1
   dio: ^5.7.0
   flutter_secure_storage: ^9.2.2
