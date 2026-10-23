@@ -64,11 +64,13 @@ class AuthProvider extends ChangeNotifier {
     required String numeroEmpleado,
     required String passwordTemporal,
     required String passwordNueva,
+    String? politicasVersion,
   }) async {
     final sesion = await _authService.activar(
       numeroEmpleado: numeroEmpleado,
       passwordTemporal: passwordTemporal,
       passwordNueva: passwordNueva,
+      politicasVersion: politicasVersion,
     );
     await _guardarSesion(sesion);
   }
@@ -81,6 +83,13 @@ class AuthProvider extends ChangeNotifier {
       passwordActual: passwordActual,
       passwordNueva: passwordNueva,
     );
+  }
+
+  Future<void> aceptarPoliticas(String politicasVersion) async {
+    final perfilFresco = await _authService.aceptarPoliticas(politicasVersion);
+    await TokenStorage.instance.actualizarPerfil(perfilFresco.toJson());
+    _perfil = perfilFresco;
+    notifyListeners();
   }
 
   Future<void> logout() async {

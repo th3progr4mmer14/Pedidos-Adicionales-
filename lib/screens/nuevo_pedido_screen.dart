@@ -171,9 +171,10 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
   Widget build(BuildContext context) {
     final storeName = context.watch<PedidoProvider>().storeName ?? "";
     final totalItems = context.watch<PedidoProvider>().items.length;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: scheme.surface,
       body: cargando
           ? Center(
               child: Column(
@@ -183,7 +184,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                   const SizedBox(height: 16),
                   Text(mensajeEspera ?? "Cargando catálogo...",
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Color(0xFF666666))),
+                      style: TextStyle(color: scheme.onSurfaceVariant)),
                 ],
               ),
             )
@@ -192,11 +193,11 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.wifi_off_rounded,
-                          color: Colors.grey, size: 56),
+                      Icon(Icons.wifi_off_rounded,
+                          color: scheme.onSurfaceVariant, size: 56),
                       const SizedBox(height: 12),
                       Text(errorCarga!,
-                          style: const TextStyle(color: Colors.grey)),
+                          style: TextStyle(color: scheme.onSurfaceVariant)),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -247,7 +248,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         color:
-                                            Colors.white.withOpacity(0.2),
+                                            Colors.white.withValues(alpha: 0.2),
                                         borderRadius:
                                             BorderRadius.circular(10),
                                       ),
@@ -309,7 +310,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                               Text(
                                 storeName,
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.75),
+                                  color: Colors.white.withValues(alpha: 0.75),
                                   fontSize: 14,
                                 ),
                               ),
@@ -340,7 +341,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                           color: seleccionado
                                               ? Colors.white
                                               : Colors.white
-                                                  .withOpacity(0.2),
+                                                  .withValues(alpha: 0.2),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),
@@ -380,11 +381,11 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                             const SizedBox(height: 8),
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: scheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.06),
+                                    color: Colors.black.withValues(alpha: 0.06),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -395,7 +396,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                 decoration: InputDecoration(
                                   hintText: "Nombre o SKU...",
                                   hintStyle: TextStyle(
-                                      color: Colors.grey.shade400),
+                                      color: scheme.onSurfaceVariant),
                                   prefixIcon: const Icon(
                                       Icons.search_rounded,
                                       color: Color(0xFFde2924)),
@@ -415,7 +416,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                               child: Text(
                                 "${productosFiltrados.length} productos${supergrupoSeleccionado != null ? ' en $supergrupoSeleccionado' : ''}",
                                 style: TextStyle(
-                                    color: Colors.grey.shade500,
+                                    color: scheme.onSurfaceVariant,
                                     fontSize: 12),
                               ),
                             ),
@@ -426,11 +427,11 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                             Container(
                               height: 200,
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: scheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.06),
+                                    color: Colors.black.withValues(alpha: 0.06),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -442,7 +443,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                   itemCount: productosFiltrados.length,
                                   separatorBuilder: (_, __) => Divider(
                                       height: 1,
-                                      color: Colors.grey.shade100),
+                                      color: scheme.outlineVariant),
                                   itemBuilder: (context, index) {
                                     final producto =
                                         productosFiltrados[index];
@@ -455,7 +456,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                         selected: seleccionado,
                                         selectedTileColor:
                                             const Color(0xFFde2924)
-                                                .withOpacity(0.06),
+                                                .withValues(alpha: 0.06),
                                         title: Text(
                                           producto.nombre,
                                           style: TextStyle(
@@ -465,7 +466,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                                 : FontWeight.normal,
                                             color: seleccionado
                                                 ? const Color(0xFF9b101a)
-                                                : const Color(0xFF1a1a1a),
+                                                : scheme.onSurface,
                                           ),
                                         ),
                                         subtitle: Row(
@@ -475,7 +476,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                               style: TextStyle(
                                                   fontSize: 12,
                                                   color:
-                                                      Colors.grey.shade500),
+                                                      scheme.onSurfaceVariant),
                                             ),
                                             if (producto.supergrupo != null &&
                                                 producto.supergrupo!.isNotEmpty) ...[
@@ -488,7 +489,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                                 decoration: BoxDecoration(
                                                   color: const Color(
                                                           0xFFe8a042)
-                                                      .withOpacity(0.15),
+                                                      .withValues(alpha: 0.15),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                           4),
@@ -541,11 +542,11 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                     horizontal: 16, vertical: 10),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFde2924)
-                                      .withOpacity(0.08),
+                                      .withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                       color: const Color(0xFFde2924)
-                                          .withOpacity(0.3)),
+                                          .withValues(alpha: 0.3)),
                                 ),
                                 child: Row(
                                   children: [
@@ -669,7 +670,7 @@ class _NuevoPedidoScreenState extends State<NuevoPedidoScreen> {
                                   ),
                                   elevation: 4,
                                   shadowColor: const Color(0xFFde2924)
-                                      .withOpacity(0.4),
+                                      .withValues(alpha: 0.4),
                                 ),
                                 onPressed: agregarProducto,
                                 icon: const Icon(
@@ -737,10 +738,10 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontWeight: FontWeight.w700,
         fontSize: 13,
-        color: Color(0xFF444444),
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
         letterSpacing: 0.3,
       ),
     );
@@ -755,11 +756,11 @@ class _InputBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),

@@ -31,6 +31,12 @@ class TokenStorage {
     return jsonDecode(raw) as Map<String, dynamic>;
   }
 
+  /// Actualiza solo el perfil cacheado (p. ej. tras aceptar políticas),
+  /// sin tocar el token.
+  Future<void> actualizarPerfil(Map<String, dynamic> perfilJson) {
+    return _storage.write(key: _perfilKey, value: jsonEncode(perfilJson));
+  }
+
   Future<void> borrarSesion() {
     return Future.wait([
       _storage.delete(key: _tokenKey),

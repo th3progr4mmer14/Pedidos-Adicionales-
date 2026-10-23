@@ -96,7 +96,7 @@ class _InicioScreenState extends State<InicioScreen>
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.35),
+                                  color: Colors.black.withValues(alpha: 0.35),
                                   blurRadius: 24,
                                   offset: const Offset(0, 10),
                                 ),
@@ -140,9 +140,9 @@ class _InicioScreenState extends State<InicioScreen>
                             height: 90,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.white.withOpacity(0.15),
+                              color: Colors.white.withValues(alpha: 0.15),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.4),
+                                color: Colors.white.withValues(alpha: 0.4),
                                 width: 2,
                               ),
                             ),

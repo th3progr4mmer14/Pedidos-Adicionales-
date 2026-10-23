@@ -108,8 +108,9 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: scheme.surface,
       appBar: AppBar(
         title: const Text('Cambiar contraseña'),
         backgroundColor: const Color(0xFF9b101a),
@@ -136,7 +137,7 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                   hintText: "Contraseña actual",
                   prefixIcon: const Icon(Icons.lock_outline),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: scheme.surfaceContainerHighest,
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
@@ -152,7 +153,7 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                   hintText: "Contraseña nueva",
                   prefixIcon: const Icon(Icons.lock_outline),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: scheme.surfaceContainerHighest,
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
@@ -169,7 +170,7 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                   hintText: "Confirmar contraseña nueva",
                   prefixIcon: const Icon(Icons.lock_outline),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: scheme.surfaceContainerHighest,
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
@@ -181,7 +182,7 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
               Text(
                 'Mínimo 10 caracteres, con mayúscula, minúscula y número. '
                 'No puede contener tu número de empleado.',
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
               ),
 
               if (error != null) ...[
@@ -206,7 +207,7 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
                 const SizedBox(height: 16),
                 Text(
                   mensajeEspera!,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
                   textAlign: TextAlign.center,
                 ),
               ],

@@ -65,11 +65,18 @@ class Perfil {
   final Rol rol;
   final List<TiendaResumen> tiendas;
 
+  /// Version del aviso de privacidad/terminos que aceptó (LegalTexts.version)
+  /// y cuándo, según el reloj del servidor. Null si todavía no acepta.
+  final String? politicasVersion;
+  final DateTime? politicasAceptadasEn;
+
   const Perfil({
     required this.numeroEmpleado,
     required this.nombre,
     required this.rol,
     required this.tiendas,
+    this.politicasVersion,
+    this.politicasAceptadasEn,
   });
 
   factory Perfil.fromJson(Map<String, dynamic> json) {
@@ -80,6 +87,10 @@ class Perfil {
       tiendas: (json['tiendas'] as List)
           .map((t) => TiendaResumen.fromJson(t as Map<String, dynamic>))
           .toList(),
+      politicasVersion: json['politicasVersion'] as String?,
+      politicasAceptadasEn: json['politicasAceptadasEn'] == null
+          ? null
+          : DateTime.parse(json['politicasAceptadasEn'] as String),
     );
   }
 
@@ -88,5 +99,7 @@ class Perfil {
         'nombre': nombre,
         'rol': rol.aBackend(),
         'tiendas': tiendas.map((t) => t.toJson()).toList(),
+        'politicasVersion': politicasVersion,
+        'politicasAceptadasEn': politicasAceptadasEn?.toIso8601String(),
       };
 }

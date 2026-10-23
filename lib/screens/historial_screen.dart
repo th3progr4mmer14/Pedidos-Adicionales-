@@ -77,8 +77,9 @@ class _HistorialScreenState extends State<HistorialScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: scheme.surface,
       body: Column(
         children: [
           // ── Header ──
@@ -106,7 +107,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -129,7 +130,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                           ? "Cargando..."
                           : "${pedidos.length} pedidos registrados",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.75),
+                        color: Colors.white.withValues(alpha: 0.75),
                         fontSize: 14,
                       ),
                     ),
@@ -150,7 +151,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         const SizedBox(height: 16),
                         Text(mensajeEspera ?? "Cargando historial...",
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: Color(0xFF666666))),
+                            style: TextStyle(color: scheme.onSurfaceVariant)),
                       ],
                     ),
                   )
@@ -159,13 +160,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.wifi_off_rounded,
-                                color: Colors.grey, size: 56),
+                            Icon(Icons.wifi_off_rounded,
+                                color: scheme.onSurfaceVariant, size: 56),
                             const SizedBox(height: 12),
                             Text(errorCarga!,
                                 textAlign: TextAlign.center,
                                 style:
-                                    const TextStyle(color: Colors.grey)),
+                                    TextStyle(color: scheme.onSurfaceVariant)),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
@@ -191,21 +192,21 @@ class _HistorialScreenState extends State<HistorialScreen> {
                               children: [
                                 Icon(Icons.inbox_rounded,
                                     size: 72,
-                                    color: Colors.grey.shade300),
+                                    color: scheme.onSurfaceVariant),
                                 const SizedBox(height: 16),
-                                const Text(
+                                Text(
                                   "Sin pedidos aún",
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF444444),
+                                    color: scheme.onSurface,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   "Los pedidos enviados aparecerán aquí",
                                   style: TextStyle(
-                                      color: Colors.grey.shade500,
+                                      color: scheme.onSurfaceVariant,
                                       fontSize: 14),
                                 ),
                               ],
@@ -227,13 +228,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                     margin:
                                         const EdgeInsets.only(bottom: 14),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: scheme.surfaceContainerHighest,
                                       borderRadius:
                                           BorderRadius.circular(20),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black
-                                              .withOpacity(0.05),
+                                              .withValues(alpha: 0.05),
                                           blurRadius: 10,
                                           offset: const Offset(0, 4),
                                         ),
@@ -273,12 +274,11 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                               children: [
                                                 Text(
                                                   pedido.nombreTienda,
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontWeight:
                                                         FontWeight.w800,
                                                     fontSize: 15,
-                                                    color:
-                                                        Color(0xFF1a1a1a),
+                                                    color: scheme.onSurface,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 4),
@@ -286,8 +286,8 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                                   "${(pedido.plaza ?? '—').replaceAll('10VHT ', '')}  ·  ${pedido.codigoTienda ?? '—'}",
                                                   style: TextStyle(
                                                     fontSize: 12,
-                                                    color: Colors
-                                                        .grey.shade500,
+                                                    color: scheme
+                                                        .onSurfaceVariant,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 6),
@@ -302,8 +302,8 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                                           BoxDecoration(
                                                         color: const Color(
                                                                 0xFFde2924)
-                                                            .withOpacity(
-                                                                0.1),
+                                                            .withValues(
+                                                                alpha: 0.1),
                                                         borderRadius:
                                                             BorderRadius
                                                                 .circular(8),
@@ -326,8 +326,8 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                                           pedido.fechaPedido),
                                                       style: TextStyle(
                                                         fontSize: 11,
-                                                        color: Colors
-                                                            .grey.shade400,
+                                                        color: scheme
+                                                            .onSurfaceVariant,
                                                       ),
                                                     ),
                                                   ],
@@ -338,7 +338,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                           Icon(
                                             Icons.arrow_forward_ios_rounded,
                                             size: 14,
-                                            color: Colors.grey.shade400,
+                                            color: scheme.onSurfaceVariant,
                                           ),
                                         ],
                                       ),
@@ -369,9 +369,10 @@ class DetallePedidoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final detalle = pedido.detalles;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: scheme.surface,
       body: Column(
         children: [
           // ── Header ──
@@ -399,7 +400,7 @@ class DetallePedidoScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -424,7 +425,7 @@ class DetallePedidoScreen extends StatelessWidget {
                         Text(
                           _formatearFecha(pedido.fechaPedido),
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             fontSize: 13,
                           ),
                         ),
@@ -453,7 +454,7 @@ class DetallePedidoScreen extends StatelessWidget {
                         Text(
                           "${(pedido.plaza ?? '—').replaceAll('10VHT ', '')}  ·  ${pedido.codigoTienda ?? '—'}",
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.75),
+                            color: Colors.white.withValues(alpha: 0.75),
                             fontSize: 13,
                           ),
                         ),
@@ -473,12 +474,12 @@ class DetallePedidoScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.inventory_2_outlined,
-                            size: 56, color: Colors.grey.shade300),
+                            size: 56, color: scheme.onSurfaceVariant),
                         const SizedBox(height: 12),
                         Text(
                           "Sin detalle disponible",
                           style: TextStyle(
-                              color: Colors.grey.shade400,
+                              color: scheme.onSurfaceVariant,
                               fontSize: 15),
                         ),
                       ],
@@ -493,11 +494,11 @@ class DetallePedidoScreen extends StatelessWidget {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: scheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -539,10 +540,10 @@ class DetallePedidoScreen extends StatelessWidget {
                                   children: [
                                     Text(
                                       item.nombreProducto,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.w700,
                                         fontSize: 14,
-                                        color: Color(0xFF1a1a1a),
+                                        color: scheme.onSurface,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -556,7 +557,7 @@ class DetallePedidoScreen extends StatelessWidget {
                                           decoration: BoxDecoration(
                                             color: const Color(
                                                     0xFFed5c32)
-                                                .withOpacity(0.12),
+                                                .withValues(alpha: 0.12),
                                             borderRadius:
                                                 BorderRadius.circular(6),
                                           ),
@@ -574,7 +575,7 @@ class DetallePedidoScreen extends StatelessWidget {
                                           item.sku ?? '',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey.shade500,
+                                            color: scheme.onSurfaceVariant,
                                           ),
                                         ),
                                       ],
@@ -588,7 +589,7 @@ class DetallePedidoScreen extends StatelessWidget {
                                           item.observaciones!,
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: Colors.grey.shade500,
+                                            color: scheme.onSurfaceVariant,
                                             fontStyle: FontStyle.italic,
                                           ),
                                         ),

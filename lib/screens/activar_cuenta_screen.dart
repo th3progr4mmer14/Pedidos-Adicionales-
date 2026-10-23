@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../config/api_config.dart';
+import '../models/legal_texts.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_exception.dart';
 import '../services/politica_password.dart';
+import 'consentimiento_politicas.dart';
 import 'pantalla_post_login.dart';
 
 /// Pantalla de activación de cuenta: cambia la contraseña temporal que dio
@@ -27,6 +29,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
   final confirmarController = TextEditingController();
 
   bool cargando = false;
+  bool aceptoPoliticas = false;
   String? error;
   String? mensajeEspera;
   Timer? _esperaTimer;
@@ -58,6 +61,10 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
       setState(() => error = errorPolitica);
       return;
     }
+    if (!aceptoPoliticas) {
+      setState(() => error = 'Debes aceptar el aviso de privacidad y los términos');
+      return;
+    }
 
     setState(() {
       cargando = true;
@@ -78,6 +85,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
         numeroEmpleado: widget.numeroEmpleado,
         passwordTemporal: passwordTemporal,
         passwordNueva: passwordNueva,
+        politicasVersion: LegalTexts.version,
       );
       if (!mounted) return;
       irAPantallaSegunPerfil(context, auth.perfil!);
@@ -96,8 +104,9 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: scheme.surface,
       appBar: AppBar(
         title: const Text('Activar cuenta'),
         backgroundColor: const Color(0xFF9b101a),
@@ -119,7 +128,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
                 'Hola ${widget.numeroEmpleado}, tu contraseña es temporal.\n'
                 'Crea una nueva para activar tu cuenta.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
               ),
               const SizedBox(height: 30),
 
@@ -131,7 +140,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
                   hintText: "Contraseña temporal",
                   prefixIcon: const Icon(Icons.lock_clock_outlined),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: scheme.surfaceContainerHighest,
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
@@ -147,7 +156,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
                   hintText: "Contraseña nueva",
                   prefixIcon: const Icon(Icons.lock_outline),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: scheme.surfaceContainerHighest,
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
@@ -164,7 +173,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
                   hintText: "Confirmar contraseña nueva",
                   prefixIcon: const Icon(Icons.lock_outline),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: scheme.surfaceContainerHighest,
                   border: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                     borderSide: BorderSide.none,
@@ -176,7 +185,15 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
               Text(
                 'Mínimo 10 caracteres, con mayúscula, minúscula y número. '
                 'No puede contener tu número de empleado.',
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+              ),
+
+              const SizedBox(height: 16),
+              ConsentimientoPoliticas(
+                value: aceptoPoliticas,
+                onChanged: cargando
+                    ? (_) {}
+                    : (v) => setState(() => aceptoPoliticas = v),
               ),
 
               if (error != null) ...[
@@ -192,7 +209,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
                 const SizedBox(height: 16),
                 Text(
                   mensajeEspera!,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -209,7 +226,7 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: cargando ? null : _activar,
+                  onPressed: (cargando || !aceptoPoliticas) ? null : _activar,
                   child: cargando
                       ? const SizedBox(
                           width: 22,
