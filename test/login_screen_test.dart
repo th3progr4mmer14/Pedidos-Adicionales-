@@ -54,7 +54,7 @@ void main() {
     expect(find.text('Número de empleado'), findsOneWidget);
     expect(find.text('Contraseña'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Ingresar'), findsOneWidget);
-    expect(find.text('Pedidos Regional Tabasco'), findsOneWidget);
+    expect(find.text('OXXO Región Tabasco'), findsOneWidget);
     expect(find.text('¿Primera vez? Activa tu cuenta'), findsOneWidget);
   });
 

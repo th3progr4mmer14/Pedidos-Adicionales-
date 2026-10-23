@@ -157,8 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AuthScaffold(
-      kicker: "OXXO REGIÓN TABASCO",
-      title: "Pedidos Regional Tabasco",
+      title: "OXXO Región Tabasco",
       subtitle: "Área de Abasto",
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

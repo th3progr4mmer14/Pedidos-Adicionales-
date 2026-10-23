@@ -19,15 +19,10 @@ class AuthScaffold extends StatefulWidget {
     required this.subtitle,
     required this.child,
     this.showBackButton = false,
-    this.kicker,
   });
 
   final String title;
   final String subtitle;
-
-  /// Línea pequeña en mayúsculas arriba del título (p. ej. "OXXO REGIÓN
-  /// TABASCO"). Null para no mostrar nada ahí.
-  final String? kicker;
 
   /// Contenido de la tarjeta (formulario).
   final Widget child;
@@ -95,7 +90,6 @@ class _AuthScaffoldState extends State<AuthScaffold>
                         title: widget.title,
                         subtitle: widget.subtitle,
                         showBackButton: widget.showBackButton,
-                        kicker: widget.kicker,
                       ),
                       // Transform.translate solo desplaza el pintado: la tarjeta
                       // visualmente se encima 40px sobre el encabezado, pero el
@@ -139,13 +133,11 @@ class _Header extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.showBackButton,
-    this.kicker,
   });
 
   final String title;
   final String subtitle;
   final bool showBackButton;
-  final String? kicker;
 
   @override
   Widget build(BuildContext context) {
@@ -213,19 +205,6 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              if (kicker != null) ...[
-                Text(
-                  kicker!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const SizedBox(height: 6),
-              ],
               Text(
                 title,
                 textAlign: TextAlign.center,
