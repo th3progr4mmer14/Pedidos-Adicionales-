@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/perfil.dart';
+import '../models/user_profile.dart';
 import '../providers/auth_provider.dart';
 import '../providers/pedido_provider.dart';
+import '../providers/theme_controller.dart';
+import 'ajustes_screen.dart';
+import 'cambiar_password_screen.dart';
+import 'cuenta_menu.dart';
 import 'login_screen.dart';
 import 'pedidos_screen.dart';
 
@@ -36,11 +41,13 @@ class _TiendaScreenState extends State<TiendaScreen> {
   List<TiendaResumen> _filtrar(List<TiendaResumen> tiendas) {
     final query = searchController.text.toLowerCase();
     return tiendas.where((t) {
-      final coincideTexto = query.isEmpty ||
+      final coincideTexto =
+          query.isEmpty ||
           t.nombre.toLowerCase().contains(query) ||
           (t.codigo ?? '').toLowerCase().contains(query) ||
           (t.plaza ?? '').toLowerCase().contains(query);
-      final coincidePlaza = plazaSeleccionada == null || t.plaza == plazaSeleccionada;
+      final coincidePlaza =
+          plazaSeleccionada == null || t.plaza == plazaSeleccionada;
       return coincideTexto && coincidePlaza;
     }).toList();
   }
@@ -59,7 +66,9 @@ class _TiendaScreenState extends State<TiendaScreen> {
     context.read<PedidoProvider>().seleccionarTienda(tienda);
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => PedidosScreen(storeName: tienda.nombre)),
+      MaterialPageRoute(
+        builder: (_) => PedidosScreen(storeName: tienda.nombre),
+      ),
     );
   }
 
@@ -68,7 +77,9 @@ class _TiendaScreenState extends State<TiendaScreen> {
     final perfil = context.watch<AuthProvider>().perfil;
     final tiendas = perfil?.tiendas ?? const <TiendaResumen>[];
     final filtradas = _filtrar(tiendas);
-    final plazas = tiendas.map((t) => t.plaza).whereType<String>().toSet().toList()..sort();
+    final plazas =
+        tiendas.map((t) => t.plaza).whereType<String>().toSet().toList()
+          ..sort();
 
     final scheme = Theme.of(context).colorScheme;
 
@@ -106,19 +117,30 @@ class _TiendaScreenState extends State<TiendaScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () => _cerrarSesion(context),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
+                        if (perfil == null)
+                          const SizedBox(width: 40, height: 40)
+                        else
+                          CuentaMenuBoton(
+                            perfil: perfil,
+                            onAjustes: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => AjustesScreen(
+                                  user: UserProfile.fromPerfil(perfil),
+                                  themeController: context
+                                      .read<ThemeController>(),
+                                  onLogout: () => _cerrarSesion(context),
+                                ),
+                              ),
                             ),
-                            child: const Icon(Icons.logout_rounded,
-                                color: Colors.white, size: 20),
+                            onCambiarPassword: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CambiarPasswordScreen(),
+                              ),
+                            ),
+                            onCerrarSesion: () => _cerrarSesion(context),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -151,12 +173,20 @@ class _TiendaScreenState extends State<TiendaScreen> {
                           controller: searchController,
                           decoration: InputDecoration(
                             hintText: "Buscar tienda o plaza...",
-                            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                            prefixIcon: const Icon(Icons.search_rounded,
-                                color: Color(0xFFde2924), size: 20),
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 14,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.search_rounded,
+                              color: Color(0xFFde2924),
+                              size: 20,
+                            ),
                             border: InputBorder.none,
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 10,
+                            ),
                           ),
                         ),
                       ),
@@ -167,17 +197,22 @@ class _TiendaScreenState extends State<TiendaScreen> {
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: plazas.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 8),
                             itemBuilder: (context, index) {
                               final plaza = plazas[index];
                               final seleccionada = plazaSeleccionada == plaza;
                               return GestureDetector(
                                 onTap: () => setState(() {
-                                  plazaSeleccionada = seleccionada ? null : plaza;
+                                  plazaSeleccionada = seleccionada
+                                      ? null
+                                      : plaza;
                                 }),
                                 child: Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: seleccionada
                                         ? Colors.white
@@ -190,7 +225,9 @@ class _TiendaScreenState extends State<TiendaScreen> {
                                       color: seleccionada
                                           ? const Color(0xFF9b101a)
                                           : Colors.white,
-                                      fontWeight: seleccionada ? FontWeight.w800 : FontWeight.w500,
+                                      fontWeight: seleccionada
+                                          ? FontWeight.w800
+                                          : FontWeight.w500,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -212,98 +249,123 @@ class _TiendaScreenState extends State<TiendaScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.store_outlined, size: 56, color: scheme.onSurfaceVariant),
+                        Icon(
+                          Icons.store_outlined,
+                          size: 56,
+                          color: scheme.onSurfaceVariant,
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           "No tienes tiendas asignadas",
-                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 15),
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 15,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "Pide a un administrador que te asigne una",
-                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
                   )
                 : filtradas.isEmpty
-                    ? Center(
-                        child: Text(
-                          "No se encontró ninguna tienda",
-                          style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 15),
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                        itemCount: filtradas.length,
-                        itemBuilder: (context, index) {
-                          final tienda = filtradas[index];
-                          return GestureDetector(
-                            onTap: () => _elegir(context, tienda),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 14),
-                              decoration: BoxDecoration(
-                                color: scheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFFde2924).withValues(alpha: 0.1),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(18),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 52,
-                                      height: 52,
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFFde2924), Color(0xFFed5c32)],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(14),
-                                      ),
-                                      child: const Icon(Icons.store_mall_directory_rounded,
-                                          color: Colors.white, size: 26),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            tienda.nombre,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 15,
-                                              color: scheme.onSurface,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            "${(tienda.plaza ?? '—').replaceAll('10VHT ', '')}  ·  ${tienda.codigo ?? '—'}",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: scheme.onSurfaceVariant,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Icon(Icons.arrow_forward_ios_rounded,
-                                        size: 15, color: scheme.onSurfaceVariant),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+                ? Center(
+                    child: Text(
+                      "No se encontró ninguna tienda",
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 15,
                       ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                    itemCount: filtradas.length,
+                    itemBuilder: (context, index) {
+                      final tienda = filtradas[index];
+                      return GestureDetector(
+                        onTap: () => _elegir(context, tienda),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 14),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFde2924,
+                                ).withValues(alpha: 0.1),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFde2924),
+                                        Color(0xFFed5c32),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: const Icon(
+                                    Icons.store_mall_directory_rounded,
+                                    color: Colors.white,
+                                    size: 26,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        tienda.nombre,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 15,
+                                          color: scheme.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "${(tienda.plaza ?? '—').replaceAll('10VHT ', '')}  ·  ${tienda.codigo ?? '—'}",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.arrow_forward_ios_rounded,
+                                  size: 15,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
