@@ -62,8 +62,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     _esperaTimer = Timer(ApiConfig.avisoServidorDormido, () {
       if (mounted) {
-        setState(() => mensajeEspera =
-            'Despertando el servidor, esto puede tardar hasta un par de minutos...');
+        setState(
+          () => mensajeEspera =
+              'Despertando el servidor, esto puede tardar hasta un par de minutos...',
+        );
       }
     });
 
@@ -155,6 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AuthScaffold(
+      kicker: "OXXO REGIÓN TABASCO",
       title: "Pedidos Regional Tabasco",
       subtitle: "Área de Abasto",
       child: Column(
@@ -185,9 +188,13 @@ class _LoginScreenState extends State<LoginScreen> {
               hint: "Contraseña",
               icono: Icons.lock_outline_rounded,
               sufijo: IconButton(
-                tooltip: mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña',
+                tooltip: mostrarPassword
+                    ? 'Ocultar contraseña'
+                    : 'Mostrar contraseña',
                 icon: Icon(
-                  mostrarPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                  mostrarPassword
+                      ? Icons.visibility_off_rounded
+                      : Icons.visibility_rounded,
                 ),
                 onPressed: cargando
                     ? null
@@ -213,7 +220,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   Expanded(
                     child: Text(
                       error!,
-                      style: TextStyle(color: scheme.onErrorContainer, fontSize: 13),
+                      style: TextStyle(
+                        color: scheme.onErrorContainer,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
@@ -230,8 +240,12 @@ class _LoginScreenState extends State<LoginScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _rojoMarca,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor: scheme.onSurface.withValues(alpha: 0.12),
-                disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.38),
+                disabledBackgroundColor: scheme.onSurface.withValues(
+                  alpha: 0.12,
+                ),
+                disabledForegroundColor: scheme.onSurface.withValues(
+                  alpha: 0.38,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -250,7 +264,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     )
                   : const Text(
                       "Ingresar",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
             ),
           ),
@@ -278,7 +295,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   Expanded(
                     child: Text(
                       mensajeEspera!,
-                      style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5),
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12.5,
+                      ),
                     ),
                   ),
                 ],
@@ -297,11 +317,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          Text(
-            "¿Olvidaste tu contraseña? Pide a tu administrador que la restablezca",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
-          ),
 
           const SizedBox(height: 20),
 
@@ -310,19 +325,28 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Text(
                   "v$_appVersion",
-                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11),
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 TextButton(
                   onPressed: _verAvisoPrivacidad,
                   style: TextButton.styleFrom(
                     minimumSize: Size.zero,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: Text(
                     "Aviso de privacidad",
-                    style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11),
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ],
