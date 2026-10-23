@@ -7,6 +7,9 @@ import '../config/api_config.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_exception.dart';
 import '../services/politica_password.dart';
+import 'auth_scaffold.dart';
+
+const _rojoMarca = Color(0xFF9b101a);
 
 /// Cambio de contraseña voluntario (distinto de la activación de cuenta):
 /// el usuario ya tiene sesión y conoce su contraseña actual.
@@ -57,8 +60,12 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
       return;
     }
 
-    final numeroEmpleado = context.read<AuthProvider>().perfil?.numeroEmpleado ?? '';
-    final errorPolitica = PoliticaPassword.validar(passwordNueva, numeroEmpleado);
+    final numeroEmpleado =
+        context.read<AuthProvider>().perfil?.numeroEmpleado ?? '';
+    final errorPolitica = PoliticaPassword.validar(
+      passwordNueva,
+      numeroEmpleado,
+    );
     if (errorPolitica != null) {
       setState(() {
         error = errorPolitica;
@@ -76,16 +83,18 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
 
     _esperaTimer = Timer(ApiConfig.avisoServidorDormido, () {
       if (mounted) {
-        setState(() => mensajeEspera =
-            'Despertando el servidor, esto puede tardar hasta un minuto...');
+        setState(
+          () => mensajeEspera =
+              'Despertando el servidor, esto puede tardar hasta un minuto...',
+        );
       }
     });
 
     try {
       await context.read<AuthProvider>().cambiarPassword(
-            passwordActual: passwordActual,
-            passwordNueva: passwordNueva,
-          );
+        passwordActual: passwordActual,
+        passwordNueva: passwordNueva,
+      );
       if (!mounted) return;
       setState(() {
         exito = 'Contraseña actualizada';
@@ -109,140 +118,125 @@ class _CambiarPasswordScreenState extends State<CambiarPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: scheme.surface,
-      appBar: AppBar(
-        title: const Text('Cambiar contraseña'),
-        backgroundColor: const Color(0xFF9b101a),
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.password_rounded,
-                size: 72,
-                color: Color(0xFF9b101a),
+    return AuthScaffold(
+      title: "Cambiar contraseña",
+      subtitle: "Actualiza tu acceso",
+      showBackButton: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: passwordActualController,
+            enabled: !cargando,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: "Contraseña actual",
+              prefixIcon: const Icon(Icons.lock_outline),
+              filled: true,
+              fillColor: scheme.surfaceContainerHighest,
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide.none,
               ),
-              const SizedBox(height: 30),
-
-              TextField(
-                controller: passwordActualController,
-                enabled: !cargando,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Contraseña actual",
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  filled: true,
-                  fillColor: scheme.surfaceContainerHighest,
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordNuevaController,
-                enabled: !cargando,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Contraseña nueva",
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  filled: true,
-                  fillColor: scheme.surfaceContainerHighest,
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: confirmarController,
-                enabled: !cargando,
-                obscureText: true,
-                onSubmitted: (_) => _guardar(),
-                decoration: InputDecoration(
-                  hintText: "Confirmar contraseña nueva",
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  filled: true,
-                  fillColor: scheme.surfaceContainerHighest,
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-              Text(
-                'Mínimo 10 caracteres, con mayúscula, minúscula y número. '
-                'No puede contener tu número de empleado.',
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
-              ),
-
-              if (error != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  error!,
-                  style: const TextStyle(color: Colors.red, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-
-              if (exito != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  exito!,
-                  style: const TextStyle(color: Colors.green, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-
-              if (mensajeEspera != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  mensajeEspera!,
-                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-
-              const SizedBox(height: 30),
-
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9b101a),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: cargando ? null : _guardar,
-                  child: cargando
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                      : const Text(
-                          "Guardar",
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: passwordNuevaController,
+            enabled: !cargando,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: "Contraseña nueva",
+              prefixIcon: const Icon(Icons.lock_outline),
+              filled: true,
+              fillColor: scheme.surfaceContainerHighest,
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: confirmarController,
+            enabled: !cargando,
+            obscureText: true,
+            onSubmitted: (_) => _guardar(),
+            decoration: InputDecoration(
+              hintText: "Confirmar contraseña nueva",
+              prefixIcon: const Icon(Icons.lock_outline),
+              filled: true,
+              fillColor: scheme.surfaceContainerHighest,
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+          Text(
+            'Mínimo 10 caracteres, con mayúscula, minúscula y número. '
+            'No puede contener tu número de empleado.',
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+          ),
+
+          if (error != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              error!,
+              style: const TextStyle(color: Colors.red, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ],
+
+          if (exito != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              exito!,
+              style: const TextStyle(color: Colors.green, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ],
+
+          if (mensajeEspera != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              mensajeEspera!,
+              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ],
+
+          const SizedBox(height: 30),
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _rojoMarca,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: cargando ? null : _guardar,
+              child: cargando
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : const Text(
+                      "Guardar",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }

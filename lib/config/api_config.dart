@@ -15,4 +15,9 @@ class ApiConfig {
   /// Tiempo de espera a partir del cual la UI puede mostrar el mensaje de
   /// "despertando el servidor" mientras sigue esperando la respuesta.
   static const Duration avisoServidorDormido = Duration(seconds: 5);
+
+  /// Login y activar cuenta son las primeras llamadas que hace la app: si el
+  /// servidor estaba dormido, son las que más probablemente se topan con el
+  /// arranque en frío completo (puede pasar del timeout general de 65s).
+  static const Duration timeoutAutenticacion = Duration(seconds: 180);
 }

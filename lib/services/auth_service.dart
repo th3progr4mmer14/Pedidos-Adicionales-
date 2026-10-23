@@ -1,3 +1,4 @@
+import '../config/api_config.dart';
 import '../models/perfil.dart';
 import '../models/sesion.dart';
 import 'api_client.dart';
@@ -10,10 +11,14 @@ class AuthService {
   final ApiClient _api;
 
   Future<Sesion> login(String numeroEmpleado, String password) async {
-    final response = await _api.post('/auth/login', data: {
-      'numeroEmpleado': numeroEmpleado,
-      'password': password,
-    });
+    final response = await _api.post(
+      '/auth/login',
+      data: {
+        'numeroEmpleado': numeroEmpleado,
+        'password': password,
+      },
+      timeout: ApiConfig.timeoutAutenticacion,
+    );
     return Sesion.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -23,12 +28,16 @@ class AuthService {
     required String passwordNueva,
     String? politicasVersion,
   }) async {
-    final response = await _api.post('/auth/activar', data: {
-      'numeroEmpleado': numeroEmpleado,
-      'passwordTemporal': passwordTemporal,
-      'passwordNueva': passwordNueva,
-      'politicasVersion': politicasVersion,
-    });
+    final response = await _api.post(
+      '/auth/activar',
+      data: {
+        'numeroEmpleado': numeroEmpleado,
+        'passwordTemporal': passwordTemporal,
+        'passwordNueva': passwordNueva,
+        'politicasVersion': politicasVersion,
+      },
+      timeout: ApiConfig.timeoutAutenticacion,
+    );
     return Sesion.fromJson(response.data as Map<String, dynamic>);
   }
 

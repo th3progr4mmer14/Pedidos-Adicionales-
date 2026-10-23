@@ -8,8 +8,11 @@ import '../models/legal_texts.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_exception.dart';
 import '../services/politica_password.dart';
+import 'auth_scaffold.dart';
 import 'consentimiento_politicas.dart';
 import 'pantalla_post_login.dart';
+
+const _rojoMarca = Color(0xFF9b101a);
 
 /// Pantalla de activación de cuenta: cambia la contraseña temporal que dio
 /// el administrador por una propia. Se llega aquí cuando /auth/login
@@ -56,13 +59,18 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
       setState(() => error = 'Las contraseñas nuevas no coinciden');
       return;
     }
-    final errorPolitica = PoliticaPassword.validar(passwordNueva, widget.numeroEmpleado);
+    final errorPolitica = PoliticaPassword.validar(
+      passwordNueva,
+      widget.numeroEmpleado,
+    );
     if (errorPolitica != null) {
       setState(() => error = errorPolitica);
       return;
     }
     if (!aceptoPoliticas) {
-      setState(() => error = 'Debes aceptar el aviso de privacidad y los términos');
+      setState(
+        () => error = 'Debes aceptar el aviso de privacidad y los términos',
+      );
       return;
     }
 
@@ -74,8 +82,10 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
 
     _esperaTimer = Timer(ApiConfig.avisoServidorDormido, () {
       if (mounted) {
-        setState(() => mensajeEspera =
-            'Despertando el servidor, esto puede tardar hasta un minuto...');
+        setState(
+          () => mensajeEspera =
+              'Despertando el servidor, esto puede tardar hasta un minuto...',
+        );
       }
     });
 
@@ -105,146 +115,132 @@ class _ActivarCuentaScreenState extends State<ActivarCuentaScreen> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: scheme.surface,
-      appBar: AppBar(
-        title: const Text('Activar cuenta'),
-        backgroundColor: const Color(0xFF9b101a),
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.lock_open_rounded,
-                size: 80,
-                color: Color(0xFF9b101a),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Hola ${widget.numeroEmpleado}, tu contraseña es temporal.\n'
-                'Crea una nueva para activar tu cuenta.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
-              ),
-              const SizedBox(height: 30),
-
-              TextField(
-                controller: passwordTemporalController,
-                enabled: !cargando,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Contraseña temporal",
-                  prefixIcon: const Icon(Icons.lock_clock_outlined),
-                  filled: true,
-                  fillColor: scheme.surfaceContainerHighest,
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordNuevaController,
-                enabled: !cargando,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Contraseña nueva",
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  filled: true,
-                  fillColor: scheme.surfaceContainerHighest,
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: confirmarController,
-                enabled: !cargando,
-                obscureText: true,
-                onSubmitted: (_) => _activar(),
-                decoration: InputDecoration(
-                  hintText: "Confirmar contraseña nueva",
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  filled: true,
-                  fillColor: scheme.surfaceContainerHighest,
-                  border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-              Text(
-                'Mínimo 10 caracteres, con mayúscula, minúscula y número. '
-                'No puede contener tu número de empleado.',
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
-              ),
-
-              const SizedBox(height: 16),
-              ConsentimientoPoliticas(
-                value: aceptoPoliticas,
-                onChanged: cargando
-                    ? (_) {}
-                    : (v) => setState(() => aceptoPoliticas = v),
-              ),
-
-              if (error != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  error!,
-                  style: const TextStyle(color: Colors.red, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-
-              if (mensajeEspera != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  mensajeEspera!,
-                  style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-
-              const SizedBox(height: 30),
-
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9b101a),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: (cargando || !aceptoPoliticas) ? null : _activar,
-                  child: cargando
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                      : const Text(
-                          "Activar cuenta",
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                ),
-              ),
-            ],
+    return AuthScaffold(
+      title: "Activar cuenta",
+      subtitle: "Define tu nueva contraseña",
+      showBackButton: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Hola ${widget.numeroEmpleado}, tu contraseña es temporal.\n'
+            'Crea una nueva para activar tu cuenta.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 14),
           ),
-        ),
+          const SizedBox(height: 24),
+
+          TextField(
+            controller: passwordTemporalController,
+            enabled: !cargando,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: "Contraseña temporal",
+              prefixIcon: const Icon(Icons.lock_clock_outlined),
+              filled: true,
+              fillColor: scheme.surfaceContainerHighest,
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: passwordNuevaController,
+            enabled: !cargando,
+            obscureText: true,
+            decoration: InputDecoration(
+              hintText: "Contraseña nueva",
+              prefixIcon: const Icon(Icons.lock_outline),
+              filled: true,
+              fillColor: scheme.surfaceContainerHighest,
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: confirmarController,
+            enabled: !cargando,
+            obscureText: true,
+            onSubmitted: (_) => _activar(),
+            decoration: InputDecoration(
+              hintText: "Confirmar contraseña nueva",
+              prefixIcon: const Icon(Icons.lock_outline),
+              filled: true,
+              fillColor: scheme.surfaceContainerHighest,
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+          Text(
+            'Mínimo 10 caracteres, con mayúscula, minúscula y número. '
+            'No puede contener tu número de empleado.',
+            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+          ),
+
+          const SizedBox(height: 16),
+          ConsentimientoPoliticas(
+            value: aceptoPoliticas,
+            onChanged: cargando
+                ? (_) {}
+                : (v) => setState(() => aceptoPoliticas = v),
+          ),
+
+          if (error != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              error!,
+              style: const TextStyle(color: Colors.red, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ],
+
+          if (mensajeEspera != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              mensajeEspera!,
+              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+          ],
+
+          const SizedBox(height: 30),
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _rojoMarca,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: (cargando || !aceptoPoliticas) ? null : _activar,
+              child: cargando
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : const Text(
+                      "Activar cuenta",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }
