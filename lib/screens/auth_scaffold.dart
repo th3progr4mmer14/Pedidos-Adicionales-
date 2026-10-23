@@ -18,6 +18,7 @@ class AuthScaffold extends StatefulWidget {
     required this.title,
     required this.subtitle,
     required this.child,
+    this.showBackButton = false,
   });
 
   final String title;
@@ -25,6 +26,12 @@ class AuthScaffold extends StatefulWidget {
 
   /// Contenido de la tarjeta (formulario).
   final Widget child;
+
+  /// Muestra una flecha para regresar (Navigator.pop) sobre el encabezado,
+  /// igual que el AppBar que reemplaza en pantallas a las que se llega
+  /// navegando (Activar cuenta, Cambiar contraseña). Login no la usa
+  /// porque no hay a dónde regresar.
+  final bool showBackButton;
 
   static const _rojoOscuro = Color(0xFF9b101a);
   static const _rojoClaro = Color(0xFFde2924);
@@ -34,7 +41,8 @@ class AuthScaffold extends StatefulWidget {
   State<AuthScaffold> createState() => _AuthScaffoldState();
 }
 
-class _AuthScaffoldState extends State<AuthScaffold> with SingleTickerProviderStateMixin {
+class _AuthScaffoldState extends State<AuthScaffold>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
@@ -42,10 +50,15 @@ class _AuthScaffoldState extends State<AuthScaffold> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.04),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _controller.forward();
   }
 
@@ -73,7 +86,11 @@ class _AuthScaffoldState extends State<AuthScaffold> with SingleTickerProviderSt
                   position: _slide,
                   child: Column(
                     children: [
-                      _Header(title: widget.title, subtitle: widget.subtitle),
+                      _Header(
+                        title: widget.title,
+                        subtitle: widget.subtitle,
+                        showBackButton: widget.showBackButton,
+                      ),
                       // Transform.translate solo desplaza el pintado: la tarjeta
                       // visualmente se encima 40px sobre el encabezado, pero el
                       // Column sigue reservando su posición original, que queda
@@ -112,10 +129,15 @@ class _AuthScaffoldState extends State<AuthScaffold> with SingleTickerProviderSt
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.title, required this.subtitle});
+  const _Header({
+    required this.title,
+    required this.subtitle,
+    required this.showBackButton,
+  });
 
   final String title;
   final String subtitle;
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +160,27 @@ class _Header extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 64),
           child: Column(
             children: [
+              if (showBackButton) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GestureDetector(
+                    onTap: () => Navigator.maybePop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               Container(
                 width: 96,
                 height: 96,

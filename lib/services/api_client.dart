@@ -38,8 +38,18 @@ class ApiClient {
     return _ejecutar(() => dio.get(path, queryParameters: queryParameters));
   }
 
-  Future<Response<dynamic>> post(String path, {Object? data}) {
-    return _ejecutar(() => dio.post(path, data: data));
+  /// [timeout], si se manda, reemplaza el envío/recepción (no la conexión,
+  /// que Dio solo configura a nivel de cliente) solo para esta petición.
+  /// Útil para login/activar, donde el arranque en frío de Render puede
+  /// tardar más que el timeout general del resto de la app.
+  Future<Response<dynamic>> post(String path, {Object? data, Duration? timeout}) {
+    return _ejecutar(() => dio.post(
+          path,
+          data: data,
+          options: timeout == null
+              ? null
+              : Options(sendTimeout: timeout, receiveTimeout: timeout),
+        ));
   }
 
   Future<Response<dynamic>> delete(String path) {
